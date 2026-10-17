@@ -68,3 +68,5 @@ end
 gem "pundit", "~> 2.5"
 
 gem "rolify", "~> 6.0"
+
+gem "devise", "~> 5.0"

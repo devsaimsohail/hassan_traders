@@ -1,5 +1,5 @@
 class PeopleController < ApplicationController
-  before_action :set_person, only: %i[ disable enable ]
+  before_action :set_person, only: %i[ disable enable unlock ]
 
   def new
     authorize User.new, :create?, policy_class: PersonPolicy
@@ -28,16 +28,22 @@ class PeopleController < ApplicationController
   def disable
     @person.transaction do
       @person.update!(disabled_at: Time.current, disabled_by: Current.user)
-      @person.sessions.destroy_all
+      @person.forget_me!
       ActivityLog.record!(action: "Edited", section: "Users", detail: "Disabled login for #{@person.name}")
     end
-    redirect_to settings_path, notice: "#{@person.name} can no longer log in."
+    redirect_to settings_path, notice: "#{@person.name} is logged out and can no longer log in."
   end
 
   def enable
     @person.update!(disabled_at: nil, disabled_by: nil)
     ActivityLog.record!(action: "Edited", section: "Users", detail: "Enabled login for #{@person.name}")
     redirect_to settings_path, notice: "#{@person.name} can log in again."
+  end
+
+  def unlock
+    @person.unlock_access!
+    ActivityLog.record!(action: "Edited", section: "Users", detail: "Unlocked login for #{@person.name}")
+    redirect_to settings_path, notice: "#{@person.name} can try logging in again."
   end
 
   private

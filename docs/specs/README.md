@@ -43,7 +43,7 @@ The clickable prototype these specs come from: https://claude.ai/artifact/Wv39ET
   - `pundit` for access checks and `rolify` for company-scoped roles (03)
   - `prawn` and `prawn-table` for PDFs (02)
   - `pagy` for paging very long lists
-  - `bcrypt` for login
+  - `devise` for login (sessions only: lockable, trackable, timeoutable, rememberable)
   - The activity log is our own insert-only table (04), not a gem.
 - Deploy with Kamal to one small VPS (about $5–7 a month).
 

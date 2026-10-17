@@ -10,4 +10,8 @@ class PersonPolicy < ApplicationPolicy
   def enable?
     can?(:settings) && record.disabled?
   end
+
+  def unlock?
+    can?(:settings) && record.access_locked?
+  end
 end

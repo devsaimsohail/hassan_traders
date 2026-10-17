@@ -5,18 +5,18 @@ class PasswordsController < ApplicationController
   end
 
   def update
-    user = Current.user
-
-    if !user.authenticate(params[:current_password])
-      flash.now[:alert] = "Your current password is not correct."
-      render :edit, status: :unprocessable_entity
-    elsif user.update(password: params[:password], password_confirmation: params[:password_confirmation], must_change_password: false)
-      user.sessions.where.not(id: Current.session.id).destroy_all
+    if current_user.update_with_password(password_params.merge(must_change_password: false))
+      bypass_sign_in current_user
       ActivityLog.record!(action: "Edited", section: "Users", detail: "Changed own password")
-      redirect_to root_path, notice: "Password changed."
+      redirect_to root_path, notice: "Password changed. You are logged out on other devices."
     else
-      flash.now[:alert] = user.errors.full_messages.to_sentence
-      render :edit, status: :unprocessable_entity
+      flash.now[:alert] = current_user.errors.full_messages.to_sentence
+      render :edit, status: :unprocessable_content
     end
   end
+
+  private
+    def password_params
+      params.permit(:current_password, :password, :password_confirmation)
+    end
 end

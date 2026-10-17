@@ -297,40 +297,6 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- Name: sessions; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.sessions (
-    id bigint NOT NULL,
-    user_id bigint NOT NULL,
-    company_id bigint,
-    ip_address character varying,
-    user_agent character varying,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
-);
-
-
---
--- Name: sessions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.sessions_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: sessions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.sessions_id_seq OWNED BY public.sessions.id;
-
-
---
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -340,16 +306,21 @@ CREATE TABLE public.users (
     mobile character varying NOT NULL,
     email character varying,
     city character varying,
-    password_digest character varying NOT NULL,
+    encrypted_password character varying NOT NULL,
     must_change_password boolean DEFAULT false NOT NULL,
-    failed_login_count integer DEFAULT 0 NOT NULL,
-    locked_until timestamp(6) without time zone,
-    last_login_at timestamp(6) without time zone,
+    failed_attempts integer DEFAULT 0 NOT NULL,
+    locked_at timestamp(6) without time zone,
+    current_sign_in_at timestamp(6) without time zone,
     last_device character varying,
     disabled_at timestamp(6) without time zone,
     disabled_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    last_sign_in_at timestamp(6) without time zone,
+    current_sign_in_ip character varying,
+    last_sign_in_ip character varying,
+    sign_in_count integer DEFAULT 0 NOT NULL,
+    remember_created_at timestamp(6) without time zone
 );
 
 
@@ -432,13 +403,6 @@ ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_
 
 
 --
--- Name: sessions id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.sessions ALTER COLUMN id SET DEFAULT nextval('public.sessions_id_seq'::regclass);
-
-
---
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -515,14 +479,6 @@ ALTER TABLE ONLY public.roles
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
-
-
---
--- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
 
 
 --
@@ -611,20 +567,6 @@ CREATE INDEX index_roles_on_resource ON public.roles USING btree (resource_type,
 
 
 --
--- Name: index_sessions_on_company_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_sessions_on_company_id ON public.sessions USING btree (company_id);
-
-
---
--- Name: index_sessions_on_user_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_sessions_on_user_id ON public.sessions USING btree (user_id);
-
-
---
 -- Name: index_users_on_disabled_by_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -672,22 +614,6 @@ CREATE TRIGGER activity_logs_append_only BEFORE DELETE OR UPDATE ON public.activ
 
 ALTER TABLE ONLY public.users_roles
     ADD CONSTRAINT fk_rails_4a41696df6 FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
--- Name: sessions fk_rails_758836b4f0; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT fk_rails_758836b4f0 FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
--- Name: sessions fk_rails_765e28851b; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT fk_rails_765e28851b FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -753,6 +679,7 @@ ALTER TABLE ONLY public.users_roles
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261018000008'),
 ('20261018000007'),
 ('20261018000006'),
 ('20261018000005'),

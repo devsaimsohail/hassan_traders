@@ -91,7 +91,7 @@
     </div>
     <div class="overflow-x-auto">
       <table class="table">
-        <thead><tr><th>Name</th><th>Role</th><th>Mobile</th><th class="hidden md:table-cell">City</th><th class="hidden md:table-cell">Last login</th><th>Login</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <thead><tr><th>Name</th><th>Role</th><th>Mobile</th><th class="hidden md:table-cell">City</th><th class="hidden md:table-cell">Last login</th><th class="hidden lg:table-cell">Logins</th><th>Login</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>
           <% @people.each do |person| %>
             <tr id="<%= dom_id(person) %>" class="<%= "bg-brand-soft" if person == Current.user %>">
@@ -99,15 +99,19 @@
               <td class="whitespace-nowrap"><%= Company::ROLES[person.role] %></td>
               <td class="whitespace-nowrap"><%= person.mobile_display %></td>
               <td class="hidden md:table-cell"><%= person.city %></td>
-              <td class="hidden whitespace-nowrap md:table-cell"><%= person.last_login_at ? "#{l(person.last_login_at, format: "%-d %b %Y, %-l:%M %P")} · #{person.last_device}" : "Never" %></td>
-              <td><%= person.disabled? ? pill("Disabled", "pill-mute") : pill("Active", "pill-ok") %></td>
-              <td class="text-right">
+              <td class="hidden whitespace-nowrap md:table-cell"><%= person.current_sign_in_at ? "#{l(person.current_sign_in_at, format: "%-d %b %Y, %-l:%M %P")} · #{person.last_device}" : "Never" %></td>
+              <td class="hidden tabular-nums lg:table-cell"><%= person.sign_in_count %></td>
+              <td><%= person.disabled? ? pill("Disabled", "pill-mute") : person.access_locked? ? pill("Locked", "pill-bad") : pill("Active", "pill-ok") %></td>
+              <td><div class="flex items-center justify-end gap-3">
+                <% if person_policy(person).unlock? %>
+                  <%= button_to "Unlock", unlock_person_path(person), method: :patch, class: "btn-link text-[13px]" %>
+                <% end %>
                 <% if person_policy(person).disable? %>
                   <%= button_to "Disable", disable_person_path(person), method: :patch, class: "btn-link text-[13px] text-bad", form: { data: { turbo_confirm: "Disable #{person.name}? They are logged out now and can't log in until enabled." } } %>
                 <% elsif person_policy(person).enable? %>
                   <%= button_to "Enable", enable_person_path(person), method: :patch, class: "btn-link text-[13px]" %>
                 <% end %>
-              </td>
+              </div></td>
             </tr>
           <% end %>
         </tbody>

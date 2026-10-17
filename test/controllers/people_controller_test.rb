@@ -25,7 +25,7 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_equal "sales_officer", other.role_in(companies(:hassan))
-    assert other.reload.authenticate("own-password")
+    assert other.reload.valid_password?("own-password")
   end
 
   test "someone already in the company is not added twice" do
@@ -43,16 +43,26 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
-  test "disabling a person ends their sessions and blocks login" do
-    users(:sales).sessions.create!(company: companies(:hassan))
+  test "disabling a person logs them out and blocks login" do
     sign_in_as users(:partner)
-
     patch disable_person_path(users(:sales))
 
     assert_redirected_to settings_path
     assert users(:sales).reload.disabled?
-    assert_empty users(:sales).sessions
     assert_equal "Disabled login for Asif Ali", last_log.detail
+
+    sign_in_as users(:sales)
+    get root_path
+    assert_redirected_to new_user_session_path
+  end
+
+  test "a partner unlocks a locked login" do
+    users(:accountant).lock_access!
+    sign_in_as users(:partner)
+    patch unlock_person_path(users(:accountant))
+
+    assert_not users(:accountant).reload.access_locked?
+    assert_equal "Unlocked login for Bilal Ahmed", last_log.detail
   end
 
   test "a partner cannot disable themselves" do

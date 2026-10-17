@@ -1,37 +1,37 @@
-<% password_digest = BCrypt::Password.create("password123") %>
+<% password_digest = Devise::Encryptor.digest(User, "password123") %>
 
 partner:
   name: Muhammad Hassan
   mobile: "03001110001"
-  password_digest: <%= password_digest %>
+  encrypted_password: <%= password_digest %>
 
 partner_two:
   name: Ali Hassan
   mobile: "03001110002"
-  password_digest: <%= password_digest %>
+  encrypted_password: <%= password_digest %>
 
 accountant:
   name: Bilal Ahmed
   mobile: "03001110003"
-  password_digest: <%= password_digest %>
+  encrypted_password: <%= password_digest %>
 
 store:
   name: Shahid Iqbal
   mobile: "03001110004"
-  password_digest: <%= password_digest %>
+  encrypted_password: <%= password_digest %>
 
 sales:
   name: Asif Ali
   mobile: "03001110005"
-  password_digest: <%= password_digest %>
+  encrypted_password: <%= password_digest %>
 
 multi:
   name: Kamran Javed
   mobile: "03001110006"
-  password_digest: <%= password_digest %>
+  encrypted_password: <%= password_digest %>
 
 disabled:
   name: Tariq Mehmood
   mobile: "03001110007"
-  password_digest: <%= password_digest %>
+  encrypted_password: <%= password_digest %>
   disabled_at: <%= 2.days.ago.to_fs(:db) %>

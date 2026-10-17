@@ -12,19 +12,10 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user.errors[:mobile].first, "Pakistani mobile"
   end
 
-  test "locks after five failed logins and unlocks after fifteen minutes" do
-    user = users(:accountant)
-    4.times { user.record_failed_login! }
-    assert_not user.locked?
-
-    user.record_failed_login!
-    assert user.locked?
-
-    travel 16.minutes do
-      assert_not user.locked?
-      user.record_failed_login!
-      assert_equal 1, user.failed_login_count
-    end
+  test "a disabled user cannot authenticate" do
+    assert users(:accountant).active_for_authentication?
+    assert_not users(:disabled).active_for_authentication?
+    assert_equal :disabled, users(:disabled).inactive_message
   end
 
   test "assign_role! keeps one role per company" do

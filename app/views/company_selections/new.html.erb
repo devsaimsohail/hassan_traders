@@ -8,10 +8,10 @@
         <%= company_logo(company) %>
         <span class="min-w-0">
           <span class="block truncate font-semibold"><%= company.name %></span>
-          <span class="block text-xs text-muted"><%= Company::ROLES[Current.user.role_in(company)] %> · <%= company.city %></span>
+          <span class="block text-xs text-muted"><%= Company::ROLES[current_user.role_in(company)] %> · <%= company.city %></span>
         </span>
       <% end %>
     <% end %>
   </div>
-  <%= button_to "Log out", session_path, method: :delete, class: "btn-link mt-4 text-xs" %>
+  <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn-link mt-4 text-xs" %>
 </div>

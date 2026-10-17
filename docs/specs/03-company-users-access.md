@@ -22,7 +22,7 @@ Set up the company (name, optional logo, optional brand colour, business details
 | currency | text | `PKR` |
 | fiscal_year_start | text | e.g. "1 July" |
 
-**users**: id, name, mobile (unique, used to log in), email (optional), city, password_digest, must_change_password, failed_login_count, locked_until, last_login_at, last_device, disabled_at, disabled_by.
+**users** (Devise): id, name, mobile (unique, used to log in), email (optional), city, encrypted_password, must_change_password, disabled_at, disabled_by, last_device, plus Devise's trackable columns (sign_in_count, current/last sign-in time and IP), lockable columns (failed_attempts, locked_at) and remember_created_at.
 
 **roles** (rolify): a user's role is a rolify role scoped to a company, e.g. `user.add_role(:accountant, company)`. Role names are `partner`, `accountant`, `store_incharge` and `sales_officer`. A user has one role per company, and the companies a user can open are the ones they have a role in. There is no memberships table. Partnership shares and partner approval are not built for now.
 
@@ -70,7 +70,9 @@ Store the matrix as data (a roles table), not code, so it can be adjusted per co
 
 ### Login
 
-- Mobile number and password (decided). OTP may come later.
+- Devise with mobile number and password (decided). Only the login and logout routes exist: no sign-up, password reset, confirmation or unlock-by-email routes. OTP may come later.
+- Devise modules: database_authenticatable, trackable, lockable (time unlock), timeoutable (12 hours idle) and rememberable ("Keep me logged in on this computer", 2 weeks).
+- A partner can unlock a locked login from Settings, and that is logged.
   - Lock for 15 minutes after 5 failed attempts.
   - Log every login (`Logged in`, with device and city or IP) and every failed attempt (`Login failed`). Failed attempts show red in the log.
   - A login attempt on a disabled account is logged as `Login failed`, with "account is disabled" in the detail.

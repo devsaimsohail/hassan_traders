@@ -10,7 +10,7 @@
     <span><span class="font-medium text-ink"><%= Current.user.name %></span> · <%= Current.access.role_name %></span>
   </span>
   <%= link_to "Password", edit_password_path, class: "btn-link text-xs" %>
-  <%= button_to session_path, method: :delete, class: "btn-ghost btn-sm" do %>
+  <%= button_to destroy_user_session_path, method: :delete, class: "btn-ghost btn-sm" do %>
     <%= icon(:logout, classes: "size-4") %> Log out
   <% end %>
 </div>

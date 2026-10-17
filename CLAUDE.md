@@ -10,7 +10,7 @@ Admin app for Pakistani traders and manufacturers: stock, purchase orders, sales
 
 ## Stack
 
-Rails 8.1, Ruby 4.0, PostgreSQL, Hotwire with importmap (no Node), Tailwind via tailwindcss-rails, Solid Queue/Cache/Cable, Kamal.
+Rails 8.1, Ruby 4.0, PostgreSQL, Devise (login only, no sign-up routes), rolify, Pundit, Hotwire with importmap (no Node), Tailwind via tailwindcss-rails, Solid Queue/Cache/Cable, Kamal.
 
 ## Rules that apply everywhere
 

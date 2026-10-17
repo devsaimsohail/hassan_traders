@@ -24,7 +24,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
     user = users(:accountant).reload
     assert_not user.must_change_password?
-    assert user.authenticate("new-password-1")
+    assert user.valid_password?("new-password-1")
     assert_equal "Changed own password", last_log.detail
   end
 end

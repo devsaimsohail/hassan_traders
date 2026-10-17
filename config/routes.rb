@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
-  resource :session, only: %i[ new create destroy ]
+  devise_for :users, only: :sessions, path: "", path_names: { sign_in: "login", sign_out: "logout" },
+    controllers: { sessions: "users/sessions" }
   resource :company_selection, only: %i[ new create ]
   resource :password, only: %i[ edit update ]
 
@@ -9,6 +10,7 @@ Rails.application.routes.draw do
     member do
       patch :disable
       patch :enable
+      patch :unlock
     end
   end
 

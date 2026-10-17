@@ -1,11 +1,8 @@
 class User < ApplicationRecord
   rolify strict: true
 
-  MAX_FAILED_LOGINS = 5
-  LOCK_PERIOD = 15.minutes
+  devise :database_authenticatable, :trackable, :lockable, :timeoutable, :rememberable
 
-  has_secure_password
-  has_many :sessions, dependent: :destroy
   belongs_to :disabled_by, class_name: "User", optional: true
 
   normalizes :mobile, with: ->(m) { User.normalize_mobile(m) }
@@ -13,7 +10,8 @@ class User < ApplicationRecord
 
   validates :name, presence: true
   validates :mobile, presence: true, uniqueness: true, format: { with: /\A03\d{9}\z/, message: "must be a Pakistani mobile number like 0300-1234567" }
-  validates :password, length: { minimum: 8 }, allow_nil: true
+  validates :password, presence: true, on: :create
+  validates :password, length: { in: Devise.password_length }, confirmation: true, allow_nil: true
 
   scope :enabled, -> { where(disabled_at: nil) }
 
@@ -48,16 +46,11 @@ class User < ApplicationRecord
     disabled_at.present?
   end
 
-  def locked?
-    locked_until.present? && locked_until.future?
+  def active_for_authentication?
+    super && !disabled?
   end
 
-  def record_failed_login!
-    count = locked_until&.past? ? 1 : failed_login_count + 1
-    update!(failed_login_count: count, locked_until: count >= MAX_FAILED_LOGINS ? LOCK_PERIOD.from_now : nil)
-  end
-
-  def record_login!(device)
-    update!(failed_login_count: 0, locked_until: nil, last_login_at: Time.current, last_device: device)
+  def inactive_message
+    disabled? ? :disabled : super
   end
 end
