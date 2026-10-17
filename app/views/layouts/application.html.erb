@@ -1,31 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" style="<%= brand_style(Current.company) %>">
   <head>
-    <title><%= content_for(:title) || "Hassan Traders" %></title>
+    <title><%= [ content_for(:title), Current.company&.name || "Hassan Traders" ].compact.join(" · ") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Hassan Traders">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-
     <%= yield :head %>
-
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
-
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <main class="container mx-auto mt-28 px-5 flex">
-      <%= yield %>
-    </main>
+  <body class="bg-page font-sans text-sm text-ink antialiased">
+    <div class="min-h-screen md:grid md:grid-cols-[14rem_minmax(0,1fr)]">
+      <%= render "shared/sidebar" %>
+
+      <main class="flex min-w-0 flex-col gap-4 px-4 py-4 md:px-7 md:py-5">
+        <header class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 class="text-xl font-semibold tracking-tight">
+              <%= content_for(:title) %>
+              <% if content_for?(:view_only) %><span class="ml-2 rounded-md bg-chip px-2 py-0.5 align-middle text-xs font-medium text-muted">View only</span><% end %>
+            </h1>
+            <% if content_for?(:subtitle) %><p class="mt-0.5 text-[13px] text-muted"><%= yield :subtitle %></p><% end %>
+          </div>
+          <%= render "shared/top_right" %>
+        </header>
+
+        <%= render "shared/flash" %>
+        <%= yield %>
+      </main>
+    </div>
   </body>
 </html>

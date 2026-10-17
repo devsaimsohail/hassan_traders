@@ -1,1 +1,111 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-page: #F6F7F9;
+  --color-ink: #101828;
+  --color-muted: #667085;
+  --color-faint: #98A2B3;
+  --color-line: #E7E9EE;
+  --color-line-soft: #F1F3F6;
+  --color-input: #D0D5DD;
+  --color-hover: #F9FAFB;
+  --color-chip: #F2F4F7;
+  --color-ok: #067647;
+  --color-ok-bg: #ECFDF3;
+  --color-bad: #D92D20;
+  --color-bad-bg: #FEF3F2;
+  --color-warn: #B54708;
+  --color-warn-bg: #FFFAEB;
+  --color-info: #175CD3;
+  --color-info-bg: #EFF8FF;
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: color-mix(in srgb, var(--brand) 9%, white);
+  --color-brand-line: color-mix(in srgb, var(--brand) 35%, white);
+}
+
+:root {
+  --brand: #0F766E;
+  --brand-ink: #FFFFFF;
+  color-scheme: light;
+}
+
+@layer components {
+  .card {
+    @apply rounded-[10px] border border-line bg-white shadow-[0_1px_2px_rgba(16,24,40,.05)];
+  }
+
+  .btn {
+    @apply inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-brand px-3.5 text-sm font-semibold text-brand-ink shadow-[0_1px_2px_rgba(16,24,40,.05)] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+  }
+
+  .btn-ghost {
+    @apply inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-input bg-white px-3.5 text-sm font-semibold text-[#344054] shadow-[0_1px_2px_rgba(16,24,40,.05)] hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+  }
+
+  .btn-sm {
+    @apply min-h-8 px-3 text-[13px];
+  }
+
+  .btn-link {
+    @apply cursor-pointer text-sm font-medium text-brand underline-offset-2 hover:underline;
+  }
+
+  .input {
+    @apply block min-h-9 w-full rounded-lg border border-input bg-white px-2.5 py-1.5 text-sm text-ink shadow-[0_1px_2px_rgba(16,24,40,.05)] placeholder:text-faint focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand-soft;
+  }
+
+  .label {
+    @apply flex flex-col gap-1.5 text-[13px] font-medium text-[#344054];
+  }
+
+  .hint {
+    @apply text-xs font-normal text-muted;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-chip px-2 py-0.5 text-xs font-medium text-[#344054] before:size-1.5 before:rounded-full before:bg-current before:opacity-70 before:content-[''];
+  }
+
+  .pill-ok { @apply bg-ok-bg text-ok; }
+  .pill-bad { @apply bg-bad-bg text-bad; }
+  .pill-warn { @apply bg-warn-bg text-warn; }
+  .pill-info { @apply bg-info-bg text-info; }
+  .pill-mute { @apply text-muted; }
+
+  .table {
+    @apply w-full border-collapse text-[13.5px] tabular-nums;
+  }
+
+  .table th {
+    @apply sticky top-0 whitespace-nowrap border-b border-line bg-[#F9FAFB] px-3 py-2 text-left text-xs font-medium text-muted first:pl-4 last:pr-4;
+  }
+
+  .table td {
+    @apply border-b border-line-soft px-3 py-2 align-middle first:pl-4 last:pr-4;
+  }
+
+  .table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-[#344054] hover:bg-chip;
+  }
+
+  .nav-link svg {
+    @apply size-[18px] shrink-0 text-faint;
+  }
+
+  .nav-link[aria-current="page"] {
+    @apply bg-brand-soft font-semibold text-brand;
+  }
+
+  .nav-link[aria-current="page"] svg {
+    @apply text-brand;
+  }
+}

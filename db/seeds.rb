@@ -1,9 +1,25 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+# Development data. Everyone below logs in with their mobile number and DEV_PASSWORD.
+DEV_PASSWORD = "hassan-dev-2026"
+
+company = Company.find_or_create_by!(name: "Hassan Traders") do |c|
+  c.legal_name = "Hassan Traders"
+  c.city = "Faisalabad"
+  c.address = "Kapra Market, Jhang Bazar"
+  c.phone = "041-2600000"
+  c.mobile = "0300-6600000"
+end
+
+[
+  [ "Muhammad Hassan", "03001110001", :partner, "Faisalabad" ],
+  [ "Ali Hassan", "03001110002", :partner, "Lahore" ],
+  [ "Bilal Ahmed", "03001110003", :accountant, "Faisalabad" ],
+  [ "Shahid Iqbal", "03001110004", :store_incharge, "Faisalabad" ],
+  [ "Asif Ali", "03001110005", :sales_officer, "Faisalabad" ]
+].each do |name, mobile, role, city|
+  user = User.find_or_create_by!(mobile:) do |u|
+    u.name = name
+    u.city = city
+    u.password = DEV_PASSWORD
+  end
+  user.assign_role!(role, company)
+end

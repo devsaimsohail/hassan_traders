@@ -1,2 +1,71 @@
 module ApplicationHelper
+  ICONS = {
+    dashboard: "M4 4h6v7H4zM14 4h6v4h-6zM14 12h6v8h-6zM4 15h6v5H4z",
+    stock: "M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8M12 13v8",
+    purchases: "M3 4h2l2.4 11h11L21 7H6M9 20h.01M18 20h.01",
+    sales: "M9 3h6v3H9zM7 4.5H5V21h14V4.5h-2M8.5 11h7M8.5 15h5",
+    invoices: "M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3",
+    payments: "M3 7h18v12H3zM3 11h18M7 15h3",
+    customers: "M9 11a4 4 0 100-8 4 4 0 000 8zM2 21a7 7 0 0114 0M16 3.5a4 4 0 010 7.5M22 21a7 7 0 00-4.5-6.5",
+    khata: "M5 4h10a3 3 0 013 3v14H8a3 3 0 01-3-3zM5 18a3 3 0 013-3h10M9 8h5",
+    activity: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 7v5l3 2",
+    settings: "M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4",
+    plus: "M12 5v14M5 12h14",
+    logout: "M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"
+  }.freeze
+
+  NAV = [
+    [ "Overview", [ { label: "Dashboard", icon: :dashboard, path: :root_path, permission: nil } ] ],
+    [ "Admin", [ { label: "Settings", icon: :settings, path: :settings_path, permission: :settings } ] ]
+  ].freeze
+
+  LEVEL_TONES = { "yes" => "pill-ok", "view" => "pill-info", "no" => "pill-mute" }.freeze
+
+  def icon(name, classes: nil)
+    tag.svg(viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": 1.8,
+      "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": true, class: classes) do
+      tag.path(d: ICONS.fetch(name))
+    end
+  end
+
+  def nav_groups
+    NAV.filter_map do |group, items|
+      visible = items.select { |item| item[:permission].nil? || Current.access.sees?(item[:permission]) }
+      [ group, visible ] if visible.any?
+    end
+  end
+
+  def person_policy(person)
+    PersonPolicy.new(Current.access, person)
+  end
+
+  def pill(text, tone = nil)
+    tag.span(text, class: [ "pill", tone ])
+  end
+
+  def level_pill(level)
+    pill(level.to_s.capitalize, LEVEL_TONES[level.to_s])
+  end
+
+  def rs(amount)
+    return "" if amount.nil?
+
+    digits = amount.to_i.abs.to_s
+    grouped = digits.length > 3 ? "#{digits[0...-3].reverse.scan(/\d{1,2}/).join(",").reverse},#{digits[-3..]}" : digits
+    "#{"-" if amount.to_i.negative?}Rs #{grouped}"
+  end
+
+  def brand_style(company)
+    color = company&.brand_color || "#0F766E"
+    ink = company&.brand_ink || "#FFFFFF"
+    "--brand: #{color}; --brand-ink: #{ink};"
+  end
+
+  def company_logo(company, size: "size-9", text: "text-[13px]")
+    if company.logo.attached?
+      image_tag company.logo, alt: "#{company.name} logo", class: "#{size} shrink-0 rounded-lg bg-white object-contain"
+    else
+      tag.span(company.initials, class: "#{size} #{text} grid shrink-0 place-items-center rounded-lg bg-brand font-semibold text-brand-ink", aria: { hidden: true })
+    end
+  end
 end

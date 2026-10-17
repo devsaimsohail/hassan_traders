@@ -1,0 +1,9 @@
+hassan:
+  name: Hassan Traders
+  city: Faisalabad
+  brand_color: "#0F766E"
+
+other:
+  name: Madina Cloth House
+  city: Lahore
+  brand_color: "#1E3A8A"

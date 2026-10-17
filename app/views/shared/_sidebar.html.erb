@@ -1,0 +1,21 @@
+<aside class="flex min-w-0 flex-col gap-2 border-b border-line bg-white px-3 pt-3 md:gap-5 md:border-r md:border-b-0 md:py-5">
+  <div class="flex min-w-0 items-center gap-2.5 px-1.5">
+    <%= company_logo(Current.company) %>
+    <div class="min-w-0">
+      <div class="truncate font-semibold"><%= Current.company.name %></div>
+      <div class="text-xs text-muted"><%= Current.company.city %></div>
+    </div>
+  </div>
+
+  <nav aria-label="Main menu" class="flex gap-0.5 overflow-x-auto pb-1.5 md:flex-col md:overflow-visible md:pb-0">
+    <% nav_groups.each do |group, items| %>
+      <div class="mx-2.5 mt-3.5 mb-1 hidden text-[11px] font-semibold uppercase tracking-wider text-faint first:mt-0 md:block"><%= group %></div>
+      <% items.each do |item| %>
+        <% path = send(item[:path]) %>
+        <%= link_to path, class: "nav-link shrink-0", aria: { current: (current_page?(path) ? "page" : nil) } do %>
+          <%= icon(item[:icon]) %><span><%= item[:label] %></span>
+        <% end %>
+      <% end %>
+    <% end %>
+  </nav>
+</aside>

@@ -22,9 +22,9 @@ Set up the company (name, optional logo, optional brand colour, business details
 | currency | text | `PKR` |
 | fiscal_year_start | text | e.g. "1 July" |
 
-**users**: id, name, mobile (unique, used to log in), email (optional), city, status (`Active` / `Disabled`), last_login_at, last_device.
+**users**: id, name, mobile (unique, used to log in), email (optional), city, password_digest, must_change_password, failed_login_count, locked_until, last_login_at, last_device, disabled_at, disabled_by.
 
-**memberships**: user_id, company_id, role (`Partner`, `Accountant`, `Store Incharge`, `Sales Officer`), share_percent (partners only), created_at. A user can be in several companies.
+**roles** (rolify): a user's role is a rolify role scoped to a company, e.g. `user.add_role(:accountant, company)`. Role names are `partner`, `accountant`, `store_incharge` and `sales_officer`. A user has one role per company, and the companies a user can open are the ones they have a role in. There is no memberships table. Partnership shares and partner approval are not built for now.
 
 ## Permissions
 
@@ -58,29 +58,29 @@ Store the matrix as data (a roles table), not code, so it can be adjusted per co
   - Brand colour: 7 preset swatches (Teal `#0F766E`, Pakistan green `#01411C`, Navy `#1E3A8A`, Maroon `#9F1239`, Orange `#C2410C`, Purple `#6D28D9`, Black `#111827`) plus a custom colour picker. Hint: "Used on buttons, menus, charts and the top strip of every PDF."
   - Changes preview live. Save writes them and logs `Edited · Settings`.
 - **Business details card:** registered name, NTN, STRN, address, phone, mobile, financial year start. Editable by partners.
-- **Partners and staff table:** name, role, partnership share, mobile, city, usual device, login status (Active / Disabled). The current user's row is highlighted. "+ Add person" button.
+- **People table:** name, role, mobile, city, last login and device, login status (Active / Disabled), Disable or Enable. The current user's row is highlighted. "+ Add person" button.
 - **Who can do what table:** the permission matrix above, as pills.
 
 ### Add person
 
-- Name, mobile, role, share % (partners only).
-- They get an SMS or WhatsApp link to set up their login.
-- **Adding another partner needs the other partner's approval.** It stays pending until then, and both actions are logged.
-- Disabling a person blocks login immediately and keeps all their history. Their open work (e.g. sales officer's customers) can be moved to someone else, and the move is logged.
+- Name, mobile, role, city, temporary password. They must choose their own password at first login.
+- If the mobile number already has a login (from another company), that person just gets a role here and keeps their password.
+- Disabling a person blocks login immediately (their sessions end) and keeps all their history. A partner cannot disable themselves.
+- Later: send the login link by SMS or WhatsApp, and require the other partner's approval to add a partner.
 
 ### Login
 
-- Open decision: mobile + OTP, or mobile/email + password. Either way:
+- Mobile number and password (decided). OTP may come later.
   - Lock for 15 minutes after 5 failed attempts.
   - Log every login (`Logged in`, with device and city or IP) and every failed attempt (`Login failed`). Failed attempts show red in the log.
-  - A login attempt on a disabled account is logged as `Login failed · account is disabled`.
+  - A login attempt on a disabled account is logged as `Login failed`, with "account is disabled" in the detail.
 - After login, a user with several companies picks one. The company switcher stays in the top bar.
 
 ### Top bar
 
 - Partner avatars (initials) with "2 partners", so staff know who can see everything.
 - The user's name and role, with the company switcher and Log out.
-- The prototype has a "Logged in as" dropdown for demoing roles. **Do not ship that.** It is for demo only.
+- The prototype has a "Logged in as" dropdown for demoing roles. It is not built: users only ever see their own login.
 
 ## Acceptance criteria
 

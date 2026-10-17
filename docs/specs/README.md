@@ -40,7 +40,7 @@ The clickable prototype these specs come from: https://claude.ai/artifact/Wv39ET
 - Filters, sorting and tabs are plain GET forms and links, so the URL holds the filter state (01). Use Turbo Frames for the table and Turbo Drive for view pages.
 - Background jobs, cache and websockets use the built-in Solid Queue, Solid Cache and Solid Cable. No Redis.
 - Planned gems:
-  - `pundit` for the permission matrix (03)
+  - `pundit` for access checks and `rolify` for company-scoped roles (03)
   - `prawn` and `prawn-table` for PDFs (02)
   - `pagy` for paging very long lists
   - `bcrypt` for login
@@ -50,10 +50,10 @@ The clickable prototype these specs come from: https://claude.ai/artifact/Wv39ET
 ## Decisions still open
 
 These are not settled. Ask the owner before building the parts they touch.
-- **Login method.** Mobile number with OTP, or mobile/email with password. See 03.
 - **Stock costing.** Weighted average cost on each receipt (recommended) or fixed rate per item. See 05.
 - **Partial receiving of a PO** and **partial dispatch of an order.** Not in v1 unless asked.
 - **Sales tax (GST) on bills.** Not in v1. Company NTN and STRN are stored and printed already.
+- **Partner approval and partnership shares.** Removed from module 03 for now; roles come from rolify only.
 - **Purchase order status.** The owner asked to hide PO statuses in the UI for now (only a Draft tab is shown). The approval workflow still exists underneath. See 06.
 - **Supplier khata.** Only a customer khata is specified. A matching supplier khata is a likely next request.
 - **Urdu script.** Labels are English with familiar Roman Urdu terms. Urdu (Nastaliq) labels may be added later; keep all UI strings in one translation file from day one.

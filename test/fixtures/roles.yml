@@ -1,0 +1,24 @@
+hassan_partner:
+  name: partner
+  resource: hassan (Company)
+  users: partner, partner_two
+
+hassan_accountant:
+  name: accountant
+  resource: hassan (Company)
+  users: accountant, multi
+
+hassan_store:
+  name: store_incharge
+  resource: hassan (Company)
+  users: store, disabled
+
+hassan_sales:
+  name: sales_officer
+  resource: hassan (Company)
+  users: sales
+
+other_partner:
+  name: partner
+  resource: other (Company)
+  users: multi

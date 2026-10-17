@@ -1,0 +1,142 @@
+<% content_for :title, "Settings" %>
+<% content_for :subtitle, "Company profile, people and what each role can do" %>
+<% content_for :view_only, "1" unless policy(@company).update? %>
+
+<div class="grid gap-3.5 lg:grid-cols-2">
+  <section id="company-profile" class="card flex flex-col gap-4 p-4">
+    <div class="flex items-baseline justify-between gap-3">
+      <h2 class="text-[15px] font-semibold">Company profile</h2>
+      <span class="text-xs text-muted">Shown on screens, bills and PDFs</span>
+    </div>
+
+    <%= form_with model: @company, url: company_path, method: :patch, class: "flex flex-col gap-4", data: { controller: "brand" } do |f| %>
+      <fieldset class="flex flex-col gap-4" <%= "disabled" unless policy(@company).update? %>>
+        <div class="label">
+          Logo <span class="hint">Optional. PNG, JPG or WebP, under 1 MB. Without a logo we show your initials.</span>
+          <div class="flex flex-wrap items-center gap-3.5">
+            <span data-brand-target="preview"><%= company_logo(@company, size: "size-14", text: "text-lg") %></span>
+            <%= f.file_field :logo, accept: Company::LOGO_TYPES.join(","), class: "text-xs", data: { brand_target: "logo", action: "change->brand#previewLogo" } %>
+            <% if @company.logo.attached? %>
+              <label class="flex items-center gap-1.5 text-xs font-normal text-muted">
+                <%= check_box_tag "company[remove_logo]", "1", false, data: { brand_target: "remove" } %> Remove logo
+              </label>
+            <% end %>
+          </div>
+        </div>
+
+        <%= f.label :name, class: "label" do %>
+          Company name
+          <%= f.text_field :name, required: true, class: "input" %>
+        <% end %>
+
+        <div class="label">
+          Brand colour <span class="hint">Optional. Used on buttons, the menu, charts and the top strip of every PDF.</span>
+          <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Brand colour">
+            <% Company::BRAND_SWATCHES.each do |hex, label| %>
+              <label class="cursor-pointer" title="<%= label %>">
+                <%= f.radio_button :brand_color, hex, class: "peer sr-only", data: { brand_target: "swatch", action: "change->brand#pick" }, aria: { label: label } %>
+                <span class="block size-7 rounded-full border-2 border-white shadow-[0_0_0_1px_var(--color-line)] peer-checked:shadow-[0_0_0_2px_var(--color-ink)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink" style="background: <%= hex %>"></span>
+              </label>
+            <% end %>
+            <%= f.color_field :brand_color, class: "h-8 w-10 cursor-pointer rounded-lg border border-input bg-white", aria: { label: "Custom brand colour" },
+                  data: { brand_target: "picker", action: "input->brand#pick" } %>
+          </div>
+        </div>
+
+        <details class="rounded-lg border border-line-soft px-3 py-2">
+          <summary class="cursor-pointer text-[13px] font-medium">Business details <span class="hint">· printed on bills</span></summary>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2">
+            <% { legal_name: "Registered name", ntn: "NTN", strn: "STRN (sales tax)", phone: "Phone", mobile: "Mobile", email: "Email", city: "City", fiscal_year_start: "Financial year starts" }.each do |field, label| %>
+              <%= f.label field, class: "label" do %>
+                <%= label %>
+                <%= f.text_field field, class: "input" %>
+              <% end %>
+            <% end %>
+            <%= f.label :address, class: "label sm:col-span-2" do %>
+              Address
+              <%= f.text_field :address, class: "input" %>
+            <% end %>
+          </div>
+        </details>
+
+        <% if policy(@company).update? %>
+          <div><%= f.submit "Save changes", class: "btn" %></div>
+        <% end %>
+      </fieldset>
+    <% end %>
+  </section>
+
+  <% unless policy(@company).update? %>
+  <section id="business-details" class="card flex flex-col gap-3 p-4">
+    <h2 class="text-[15px] font-semibold">Business details</h2>
+    <dl class="grid grid-cols-[minmax(8rem,auto)_1fr] gap-x-4 gap-y-2">
+      <% [ [ "Registered name", @company.legal_name ], [ "NTN", @company.ntn ], [ "STRN", @company.strn ], [ "Address", [ @company.address, @company.city ].compact_blank.join(", ") ],
+           [ "Phone", @company.phone ], [ "Mobile", @company.mobile ], [ "Email", @company.email ], [ "Financial year starts", @company.fiscal_year_start ] ].each do |label, value| %>
+        <dt class="text-[13px] text-muted"><%= label %></dt>
+        <dd><%= value.presence || tag.span("Not set", class: "text-faint") %></dd>
+      <% end %>
+    </dl>
+  </section>
+  <% end %>
+
+  <section id="people" class="card overflow-hidden lg:col-span-2">
+    <div class="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 pb-2">
+      <div>
+        <h2 class="text-[15px] font-semibold">People</h2>
+        <p class="text-xs text-muted">Everyone who can log in to <%= @company.name %>, and their role.</p>
+      </div>
+      <% if person_policy(User.new).create? %>
+        <%= link_to new_person_path, class: "btn-ghost btn-sm" do %><%= icon(:plus, classes: "size-4") %> Add person<% end %>
+      <% end %>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead><tr><th>Name</th><th>Role</th><th>Mobile</th><th class="hidden md:table-cell">City</th><th class="hidden md:table-cell">Last login</th><th>Login</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody>
+          <% @people.each do |person| %>
+            <tr id="<%= dom_id(person) %>" class="<%= "bg-brand-soft" if person == Current.user %>">
+              <td class="whitespace-nowrap font-medium"><%= person.name %><%= " (you)" if person == Current.user %></td>
+              <td class="whitespace-nowrap"><%= Company::ROLES[person.role] %></td>
+              <td class="whitespace-nowrap"><%= person.mobile_display %></td>
+              <td class="hidden md:table-cell"><%= person.city %></td>
+              <td class="hidden whitespace-nowrap md:table-cell"><%= person.last_login_at ? "#{l(person.last_login_at, format: "%-d %b %Y, %-l:%M %P")} · #{person.last_device}" : "Never" %></td>
+              <td><%= person.disabled? ? pill("Disabled", "pill-mute") : pill("Active", "pill-ok") %></td>
+              <td class="text-right">
+                <% if person_policy(person).disable? %>
+                  <%= button_to "Disable", disable_person_path(person), method: :patch, class: "btn-link text-[13px] text-bad", form: { data: { turbo_confirm: "Disable #{person.name}? They are logged out now and can't log in until enabled." } } %>
+                <% elsif person_policy(person).enable? %>
+                  <%= button_to "Enable", enable_person_path(person), method: :patch, class: "btn-link text-[13px]" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="roles" class="card overflow-hidden lg:col-span-2">
+    <div class="px-4 pt-4 pb-2">
+      <h2 class="text-[15px] font-semibold">Who can do what</h2>
+      <p class="text-xs text-muted">View = can see, cannot change.</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Role</th>
+            <% RolePermission::PERMISSIONS.each_value do |label| %><th class="text-center"><%= label %></th><% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% @levels.each do |role, levels| %>
+            <tr>
+              <td class="whitespace-nowrap font-medium"><%= Company::ROLES[role] %></td>
+              <% RolePermission::PERMISSIONS.each_key do |permission| %><td class="text-center"><%= level_pill(levels[permission]) %></td><% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

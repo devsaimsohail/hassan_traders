@@ -1,0 +1,16 @@
+<div class="flex flex-wrap items-center gap-3 text-xs text-muted">
+  <% if (companies = Current.user.companies.order(:name)).many? %>
+    <%= form_with url: company_selection_path, class: "flex items-center gap-1.5", data: { controller: "autosubmit" } do |f| %>
+      <%= f.select :company_id, companies.map { |c| [ c.name, c.id ] }, { selected: Current.company.id },
+            class: "input min-h-8 py-1 text-[13px] shadow-none", aria: { label: "Company" }, data: { action: "change->autosubmit#submit" } %>
+    <% end %>
+  <% end %>
+  <span class="flex items-center gap-2">
+    <span class="grid size-7 place-items-center rounded-full bg-brand-soft text-[11px] font-semibold text-brand"><%= Current.user.initials %></span>
+    <span><span class="font-medium text-ink"><%= Current.user.name %></span> · <%= Current.access.role_name %></span>
+  </span>
+  <%= link_to "Password", edit_password_path, class: "btn-link text-xs" %>
+  <%= button_to session_path, method: :delete, class: "btn-ghost btn-sm" do %>
+    <%= icon(:logout, classes: "size-4") %> Log out
+  <% end %>
+</div>

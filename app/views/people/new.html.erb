@@ -1,0 +1,33 @@
+<% content_for :title, "Add person" %>
+<% content_for :subtitle, "They log in with their mobile number and the password you set here, then choose their own password." %>
+<div class="card max-w-xl p-5">
+  <%= form_with model: @person, scope: :person, url: people_path, class: "grid gap-4 sm:grid-cols-2" do |f| %>
+    <% if @person.errors.any? %>
+      <p class="rounded-lg bg-bad-bg px-3.5 py-2.5 text-[13px] text-bad sm:col-span-2" role="alert"><%= @person.errors.full_messages.to_sentence %></p>
+    <% end %>
+    <%= f.label :name, class: "label" do %>
+      Name
+      <%= f.text_field :name, required: true, autofocus: true, class: "input" %>
+    <% end %>
+    <%= f.label :mobile, class: "label" do %>
+      Mobile number
+      <%= f.telephone_field :mobile, required: true, placeholder: "0300-1234567", class: "input" %>
+    <% end %>
+    <%= f.label :role, class: "label" do %>
+      Role
+      <%= f.select :role, Company::ROLES.invert, { selected: @role }, class: "input" %>
+    <% end %>
+    <%= f.label :city, class: "label" do %>
+      City <span class="hint">Optional</span>
+      <%= f.text_field :city, class: "input" %>
+    <% end %>
+    <%= f.label :password, class: "label sm:col-span-2" do %>
+      Temporary password <span class="hint">At least 8 characters. Not used if this mobile number already has a login.</span>
+      <%= f.password_field :password, minlength: 8, maxlength: 72, autocomplete: "new-password", class: "input" %>
+    <% end %>
+    <div class="flex gap-2 sm:col-span-2">
+      <%= f.submit "Add person", class: "btn" %>
+      <%= link_to "Cancel", settings_path, class: "btn-ghost" %>
+    </div>
+  <% end %>
+</div>

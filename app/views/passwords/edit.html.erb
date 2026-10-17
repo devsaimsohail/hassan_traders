@@ -1,0 +1,19 @@
+<% content_for :title, "Change password" %>
+<% content_for :subtitle, Current.user.must_change_password? ? "Please set your own password before you continue." : "Logging in with the new password will sign you out on other devices." %>
+<div class="card max-w-md p-5">
+  <%= form_with url: password_path, method: :patch, class: "flex flex-col gap-4" do |f| %>
+    <%= f.label :current_password, class: "label" do %>
+      Current password
+      <%= f.password_field :current_password, required: true, autocomplete: "current-password", class: "input" %>
+    <% end %>
+    <%= f.label :password, class: "label" do %>
+      New password <span class="hint">At least 8 characters</span>
+      <%= f.password_field :password, required: true, minlength: 8, maxlength: 72, autocomplete: "new-password", class: "input" %>
+    <% end %>
+    <%= f.label :password_confirmation, class: "label" do %>
+      Type the new password again
+      <%= f.password_field :password_confirmation, required: true, autocomplete: "new-password", class: "input" %>
+    <% end %>
+    <div><%= f.submit "Save password", class: "btn" %></div>
+  <% end %>
+</div>

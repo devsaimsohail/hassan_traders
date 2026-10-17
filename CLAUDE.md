@@ -15,7 +15,7 @@ Rails 8.1, Ruby 4.0, PostgreSQL, Hotwire with importmap (no Node), Tailwind via 
 ## Rules that apply everywhere
 
 - Every business table has `company_id`. Scope every query to the current company.
-- Check permissions on the server with Pundit, using the role matrix in spec 03.
+- Roles are rolify roles scoped to a company (`user.add_role(:accountant, company)`). Check access on the server with Pundit policies; `Current.access` gives the role's level (yes/view/no) for each permission in spec 03.
 - Every create, edit, approve, cancel, reverse, receive, dispatch, login and PDF download writes to the activity log (spec 04) in the same transaction.
 - Never hard-delete bills, payments, POs, orders or stock moves. Cancel or reverse instead.
 - Stock changes only through stock moves created by receiving a PO, dispatching an order or a production issue.

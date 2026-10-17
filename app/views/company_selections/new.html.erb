@@ -1,0 +1,17 @@
+<% content_for :title, "Choose company" %>
+<div class="card p-6">
+  <h1 class="text-lg font-semibold">Choose a company</h1>
+  <p class="mt-1 text-[13px] text-muted">You work in more than one company. You can switch later from the top bar.</p>
+  <div class="mt-5 flex flex-col gap-2">
+    <% @companies.each do |company| %>
+      <%= button_to company_selection_path, params: { company_id: company.id }, class: "flex w-full cursor-pointer items-center gap-3 rounded-lg border border-line px-3 py-2.5 text-left hover:bg-hover", style: brand_style(company) do %>
+        <%= company_logo(company) %>
+        <span class="min-w-0">
+          <span class="block truncate font-semibold"><%= company.name %></span>
+          <span class="block text-xs text-muted"><%= Company::ROLES[Current.user.role_in(company)] %> · <%= company.city %></span>
+        </span>
+      <% end %>
+    <% end %>
+  </div>
+  <%= button_to "Log out", session_path, method: :delete, class: "btn-link mt-4 text-xs" %>
+</div>

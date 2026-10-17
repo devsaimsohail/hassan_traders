@@ -1,0 +1,13 @@
+<% content_for :title, "Dashboard" %>
+<% content_for :subtitle, "Your business at a glance" %>
+<div class="card p-5">
+  <h2 class="text-[15px] font-semibold">Assalam o Alaikum, <%= Current.user.name.split.first %></h2>
+  <p class="mt-1 text-muted">You are logged in to <%= Current.company.name %> as <%= Current.access.role_name %>. The dashboard figures come with the later modules. Here is what your role can do:</p>
+  <div class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-2">
+    <% @permissions.each do |label, level| %>
+      <div class="flex items-center justify-between gap-2 rounded-lg border border-line-soft px-3 py-2">
+        <span><%= label %></span><%= level_pill(level) %>
+      </div>
+    <% end %>
+  </div>
+</div>
