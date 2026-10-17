@@ -1,0 +1,63 @@
+<% content_for :title, @item.name %>
+<% content_for :subtitle, "#{@item.category_label} · code #{@item.code}" %>
+
+<div><%= link_to "← Back to stock", items_path, class: "btn-link text-[13px]" %></div>
+
+<section class="card flex flex-col gap-4 p-4" id="item">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="flex items-center gap-2.5">
+      <h2 class="text-lg font-semibold"><%= @item.name %></h2>
+      <%= pill(@item.status, @item.status_tone) %>
+    </div>
+    <div class="flex flex-wrap gap-1.5">
+      <%= link_to item_path(@item, format: :pdf), class: "btn btn-sm", data: { turbo: false } do %><%= icon(:pdf, classes: "size-4") %> Stock card PDF<% end %>
+      <% if policy(@item).update? %><%= link_to "Edit item", edit_item_path(@item), class: "btn-ghost btn-sm" %><% end %>
+    </div>
+  </div>
+
+  <dl class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-x-5 gap-y-3">
+    <% [ [ "Unit", @item.unit ], [ "Reorder at", Fmt.qty(@item.reorder_level) ], [ "Purchase rate", Fmt.rs(@item.rate) ],
+         ([ "Sale price", Fmt.rs(@item.sale_price) ] if @item.product?), [ "Last received", @item.last_in ? Fmt.date(@item.last_in) : "Never" ] ].compact.each do |label, value| %>
+      <div><dt class="text-xs text-muted"><%= label %></dt><dd class="font-medium"><%= value %></dd></div>
+    <% end %>
+  </dl>
+
+  <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] rounded-lg border border-line-soft bg-[#FAFBFC]">
+    <% [ [ "In stock", "#{Fmt.qty(@item.stock)} #{@item.unit}" ], [ "Stock value", Fmt.rs(@item.value) ], [ "Opening stock", Fmt.qty(@item.opening_qty) ],
+         [ "Received", Fmt.qty(@item.stock_in) ], [ "Sold or used", Fmt.qty(@item.stock_out) ] ].each do |label, value| %>
+      <div class="border-l border-line-soft px-3.5 py-2.5 first:border-l-0">
+        <div class="text-xs text-muted"><%= label %></div>
+        <div class="text-lg font-semibold tabular-nums whitespace-nowrap"><%= value %></div>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<section class="card overflow-hidden" id="item-moves">
+  <div class="flex items-baseline justify-between gap-3 px-4 pt-4 pb-2">
+    <h2 class="text-[15px] font-semibold">Stock in / out</h2>
+    <span class="text-xs text-muted">Newest first</span>
+  </div>
+  <% if @moves.any? %>
+    <div class="max-h-[32rem] overflow-auto">
+      <table class="table">
+        <thead><tr><th>Date</th><th>In / Out</th><th class="hidden md:table-cell">Reason</th><th class="text-right">Qty</th><th>Against</th><th class="hidden md:table-cell">Done by</th></tr></thead>
+        <tbody>
+          <% @moves.each do |move| %>
+            <% path = record_path_for(move.ref) %>
+            <tr class="<%= "cursor-pointer hover:bg-hover" if path %>" <%= tag.attributes(data: { controller: "row-link", action: "click->row-link#open", row_link_href_value: path }) if path %>>
+              <td class="whitespace-nowrap"><%= Fmt.date(move.date) %></td>
+              <td><%= pill(move.direction_label, move.direction == "in" ? "pill-ok" : "pill-info") %></td>
+              <td class="hidden md:table-cell"><%= move.reason_label %></td>
+              <td class="text-right font-medium whitespace-nowrap"><%= Fmt.qty(move.qty) %></td>
+              <td class="whitespace-nowrap"><%= move.ref %></td>
+              <td class="hidden md:table-cell"><%= move.user&.name %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="px-4 pb-6 text-muted">No stock has moved yet. Opening stock is <%= Fmt.qty(@item.opening_qty) %> <%= @item.unit %>.</p>
+  <% end %>
+</section>

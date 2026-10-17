@@ -1,0 +1,5 @@
+<% content_for :title, "Stock" %>
+<% content_for :subtitle, "Raw material (kacha maal) and finished goods (tayyar maal) in the godown" %>
+<% content_for :view_only, "1" unless policy(Item).create? %>
+<%= render "items/tabs" %>
+<%= render "lists/list", list: @list, row_path: ->(item) { item_path(item) }, actions: render("items/actions") %>

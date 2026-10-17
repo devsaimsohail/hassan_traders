@@ -18,6 +18,7 @@ module ApplicationHelper
 
   NAV = [
     [ "Overview", [ { label: "Dashboard", icon: :dashboard, path: :root_path, permission: nil } ] ],
+    [ "Inventory", [ { label: "Stock", icon: :stock, path: :items_path, permission: :stock, match: "/stock" } ] ],
     [ "Admin", [
       { label: "Activity log", icon: :activity, path: :activity_logs_path, permission: :activity_log },
       { label: "Settings", icon: :settings, path: :settings_path, permission: :settings }
@@ -40,8 +41,13 @@ module ApplicationHelper
     end
   end
 
-  def record_path_for(_ref)
-    nil
+  def record_path_for(ref)
+    return if ref.blank?
+
+    if ref.match?(/\A[RP]\d+\z/) && Current.access.sees?(:stock)
+      @item_ids_by_code ||= Current.company.items.pluck(:code, :id).to_h
+      item_path(@item_ids_by_code[ref]) if @item_ids_by_code[ref]
+    end
   end
 
   def person_policy(person)

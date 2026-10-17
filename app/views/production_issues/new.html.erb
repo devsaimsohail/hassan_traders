@@ -1,0 +1,32 @@
+<% content_for :title, "Issue to production" %>
+<% content_for :subtitle, "Raw material taken out of the godown for production. Stock goes down and the slip is logged." %>
+<div class="card max-w-2xl p-5">
+  <%= form_with model: @issue, scope: :production_issue, url: production_issues_path, class: "flex flex-col gap-4" do |f| %>
+    <% if @issue.errors.any? %>
+      <p class="rounded-lg bg-bad-bg px-3.5 py-2.5 text-[13px] text-bad" role="alert"><%= @issue.errors.full_messages.to_sentence %></p>
+    <% end %>
+    <%= f.label :date, class: "label max-w-48" do %>
+      Date
+      <%= f.date_field :date, required: true, class: "input" %>
+    <% end %>
+    <div class="flex flex-col gap-2">
+      <div class="grid grid-cols-[minmax(0,3fr)_minmax(0,1fr)] gap-2 text-xs text-muted"><span>Raw material</span><span>Quantity</span></div>
+      <% options = @issue.raw_materials.with_stock.map { |i| [ "#{i.name} · #{Fmt.qty(i.stock)} #{i.unit} in stock", i.id ] } %>
+      <% @issue.lines.each_with_index do |line, i| %>
+        <div class="grid grid-cols-[minmax(0,3fr)_minmax(0,1fr)] gap-2">
+          <%= select_tag "production_issue[lines_attributes][#{i}][item_id]", options_for_select(options, line.item_id), include_blank: "Choose item", class: "input", aria: { label: "Item on line #{i + 1}" } %>
+          <%= number_field_tag "production_issue[lines_attributes][#{i}][qty]", line.qty, min: 0, step: "any", class: "input", aria: { label: "Quantity on line #{i + 1}" } %>
+        </div>
+      <% end %>
+      <p class="hint">Leave unused lines empty.</p>
+    </div>
+    <%= f.label :note, class: "label" do %>
+      Note <span class="hint">Optional, e.g. lot or machine</span>
+      <%= f.text_field :note, class: "input" %>
+    <% end %>
+    <div class="flex gap-2">
+      <%= f.submit "Issue to production", class: "btn" %>
+      <%= link_to "Cancel", stock_moves_path, class: "btn-ghost" %>
+    </div>
+  <% end %>
+</div>

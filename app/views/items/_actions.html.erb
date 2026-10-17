@@ -1,0 +1,6 @@
+<% if policy(:production_issue).create? %>
+  <%= link_to "Issue to production", new_production_issue_path, class: "btn-ghost btn-sm" %>
+<% end %>
+<% if policy(Item).create? %>
+  <%= link_to new_item_path, class: "btn btn-sm" do %><%= icon(:plus, classes: "size-4") %> Add item<% end %>
+<% end %>

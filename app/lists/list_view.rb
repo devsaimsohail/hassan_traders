@@ -5,11 +5,11 @@ class ListView
     "last_month" => "Last month", "3m" => "Last 3 months", "custom" => "Pick dates…"
   }.freeze
 
-  Column = Struct.new(:key, :label, :sort, :format, :align, :optional, :pdf_width, :tones, keyword_init: true) do
+  Column = Struct.new(:key, :label, :sort, :format, :align, :optional, :pdf_width, :pdf_only, :nowrap, :tones, keyword_init: true) do
     def right? = align == :right
   end
   Tab = Struct.new(:key, :label, :condition, keyword_init: true)
-  Select = Struct.new(:key, :label, :all_label, :column, keyword_init: true)
+  Select = Struct.new(:key, :label, :all_label, :column, :labels, keyword_init: true)
 
   class_attribute :title, :columns, :tabs, :selects, :search_columns, :date_column, :default_preset,
     :default_sort, :pdf_landscape, :search_placeholder, :tab_group, instance_writer: false
@@ -26,10 +26,10 @@ class ListView
   def self.tab(key, label, condition = nil) = self.tabs += [ Tab.new(key: key.to_s, label:, condition:) ]
   RESERVED_PARAMS = %w[action controller format q tab preset from to sort dir page].freeze
 
-  def self.select(key, label, all_label:, column: key)
+  def self.select(key, label, all_label:, column: key, labels: nil)
     raise ArgumentError, "#{key} is a reserved parameter" if RESERVED_PARAMS.include?(key.to_s)
 
-    self.selects += [ Select.new(key: key.to_s, label:, all_label:, column:) ]
+    self.selects += [ Select.new(key: key.to_s, label:, all_label:, column:, labels:) ]
   end
 
   attr_reader :params
@@ -73,7 +73,7 @@ class ListView
   end
 
   def tab_counts
-    @tab_counts ||= tabs.to_h { |t| [ t.key, apply_tab(filtered, t).count ] }
+    @tab_counts ||= tabs.to_h { |t| [ t.key, apply_tab(filtered, t).unscope(:select).count ] }
   end
 
   def rows
@@ -84,11 +84,12 @@ class ListView
     sorted(scope).to_a
   end
 
-  def total_count = @total_count ||= scope.count
+  def total_count = @total_count ||= scope.unscope(:select).count
   def more_pages? = page * PER_PAGE < total_count
 
   def options_for(select)
-    @base.reorder(nil).distinct.where.not(select.column => [ nil, "" ]).order(select.column).pluck(select.column)
+    values = @base.reorder(nil).unscope(:select).distinct.where.not(select.column => [ nil, "" ]).order(select.column).pluck(select.column)
+    values.map { |v| [ select.labels ? select.labels.fetch(v, v) : v, v ] }
   end
 
   def sort_key = sortable(params[:sort]) ? params[:sort] : default_sort.first.to_s
@@ -111,7 +112,7 @@ class ListView
   def filters_text
     texts = []
     texts << "Date: #{date_text}" if date_column
-    selects.each { |s| texts << "#{s.label}: #{selected(s)}" if selected(s) }
+    selects.each { |s| texts << "#{s.label}: #{s.labels ? s.labels.fetch(selected(s), selected(s)) : selected(s)}" if selected(s) }
     texts << "#{tab_group}: #{current_tab.label}" if tabs.any? && current_tab != tabs.first
     texts << "Search: \"#{query}\"" if query.present?
     texts
@@ -127,6 +128,7 @@ class ListView
   def value(row, column) = row.public_send(column.key)
   def flagged?(_row) = false
   def totals = [ [ "Records", Fmt.lakh(total_count) ] ]
+  def screen_columns = columns.reject(&:pdf_only)
   def pdf_columns = columns.select(&:pdf_width)
   def pdf_totals = nil
 

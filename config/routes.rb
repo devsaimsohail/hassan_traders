@@ -16,6 +16,13 @@ Rails.application.routes.draw do
 
   resources :activity_logs, path: "activity", only: :index
 
+  get "stock", to: redirect("/stock/items")
+  scope "stock" do
+    resources :items, except: :destroy
+    resources :stock_moves, path: "moves", only: :index
+    resources :production_issues, path: "issues", only: %i[ new create ]
+  end
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "home#show"

@@ -22,6 +22,19 @@ END;
 $$;
 
 
+--
+-- Name: append_only_row(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.append_only_row() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  RAISE EXCEPTION '% is append-only', TG_TABLE_NAME;
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -221,6 +234,46 @@ ALTER SEQUENCE public.companies_id_seq OWNED BY public.companies.id;
 
 
 --
+-- Name: items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.items (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    code character varying NOT NULL,
+    name character varying NOT NULL,
+    category character varying NOT NULL,
+    unit character varying NOT NULL,
+    rate integer DEFAULT 0 NOT NULL,
+    sale_price integer,
+    reorder_level numeric(12,3) DEFAULT 0.0 NOT NULL,
+    opening_qty numeric(12,3) DEFAULT 0.0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT items_category CHECK (((category)::text = ANY ((ARRAY['raw_material'::character varying, 'product'::character varying])::text[])))
+);
+
+
+--
+-- Name: items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.items_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.items_id_seq OWNED BY public.items.id;
+
+
+--
 -- Name: role_permissions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -294,6 +347,46 @@ ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 CREATE TABLE public.schema_migrations (
     version character varying NOT NULL
 );
+
+
+--
+-- Name: stock_moves; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.stock_moves (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    item_id bigint NOT NULL,
+    user_id bigint,
+    date date NOT NULL,
+    direction character varying NOT NULL,
+    reason character varying NOT NULL,
+    qty numeric(12,3) NOT NULL,
+    ref character varying,
+    note character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT stock_moves_direction CHECK (((direction)::text = ANY ((ARRAY['in'::character varying, 'out'::character varying])::text[]))),
+    CONSTRAINT stock_moves_qty_positive CHECK ((qty > (0)::numeric))
+);
+
+
+--
+-- Name: stock_moves_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.stock_moves_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: stock_moves_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.stock_moves_id_seq OWNED BY public.stock_moves.id;
 
 
 --
@@ -389,6 +482,13 @@ ALTER TABLE ONLY public.companies ALTER COLUMN id SET DEFAULT nextval('public.co
 
 
 --
+-- Name: items id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.items ALTER COLUMN id SET DEFAULT nextval('public.items_id_seq'::regclass);
+
+
+--
 -- Name: role_permissions id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -400,6 +500,13 @@ ALTER TABLE ONLY public.role_permissions ALTER COLUMN id SET DEFAULT nextval('pu
 --
 
 ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_id_seq'::regclass);
+
+
+--
+-- Name: stock_moves id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.stock_moves ALTER COLUMN id SET DEFAULT nextval('public.stock_moves_id_seq'::regclass);
 
 
 --
@@ -458,6 +565,14 @@ ALTER TABLE ONLY public.companies
 
 
 --
+-- Name: items items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.items
+    ADD CONSTRAINT items_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: role_permissions role_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -479,6 +594,14 @@ ALTER TABLE ONLY public.roles
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: stock_moves stock_moves_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.stock_moves
+    ADD CONSTRAINT stock_moves_pkey PRIMARY KEY (id);
 
 
 --
@@ -539,6 +662,27 @@ CREATE INDEX index_activity_logs_on_user_id ON public.activity_logs USING btree 
 
 
 --
+-- Name: index_items_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_items_on_company_id ON public.items USING btree (company_id);
+
+
+--
+-- Name: index_items_on_company_id_and_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_items_on_company_id_and_code ON public.items USING btree (company_id, code);
+
+
+--
+-- Name: index_items_on_company_id_and_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_items_on_company_id_and_name ON public.items USING btree (company_id, name);
+
+
+--
 -- Name: index_role_permissions_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -564,6 +708,48 @@ CREATE UNIQUE INDEX index_roles_on_name_and_resource_type_and_resource_id ON pub
 --
 
 CREATE INDEX index_roles_on_resource ON public.roles USING btree (resource_type, resource_id);
+
+
+--
+-- Name: index_stock_moves_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_stock_moves_on_company_id ON public.stock_moves USING btree (company_id);
+
+
+--
+-- Name: index_stock_moves_on_company_id_and_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_stock_moves_on_company_id_and_date ON public.stock_moves USING btree (company_id, date);
+
+
+--
+-- Name: index_stock_moves_on_company_id_and_ref; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_stock_moves_on_company_id_and_ref ON public.stock_moves USING btree (company_id, ref);
+
+
+--
+-- Name: index_stock_moves_on_item_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_stock_moves_on_item_id ON public.stock_moves USING btree (item_id);
+
+
+--
+-- Name: index_stock_moves_on_item_id_and_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_stock_moves_on_item_id_and_date ON public.stock_moves USING btree (item_id, date);
+
+
+--
+-- Name: index_stock_moves_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_stock_moves_on_user_id ON public.stock_moves USING btree (user_id);
 
 
 --
@@ -609,11 +795,34 @@ CREATE TRIGGER activity_logs_append_only BEFORE DELETE OR UPDATE ON public.activ
 
 
 --
+-- Name: stock_moves stock_moves_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER stock_moves_append_only BEFORE DELETE OR UPDATE ON public.stock_moves FOR EACH ROW EXECUTE FUNCTION public.append_only_row();
+
+
+--
+-- Name: stock_moves fk_rails_453272e40c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.stock_moves
+    ADD CONSTRAINT fk_rails_453272e40c FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: users_roles fk_rails_4a41696df6; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users_roles
     ADD CONSTRAINT fk_rails_4a41696df6 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: stock_moves fk_rails_525bab533d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.stock_moves
+    ADD CONSTRAINT fk_rails_525bab533d FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -630,6 +839,22 @@ ALTER TABLE ONLY public.role_permissions
 
 ALTER TABLE ONLY public.active_storage_variant_records
     ADD CONSTRAINT fk_rails_993965df05 FOREIGN KEY (blob_id) REFERENCES public.active_storage_blobs(id);
+
+
+--
+-- Name: items fk_rails_ad750f090b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.items
+    ADD CONSTRAINT fk_rails_ad750f090b FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: stock_moves fk_rails_c219f986cb; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.stock_moves
+    ADD CONSTRAINT fk_rails_c219f986cb FOREIGN KEY (item_id) REFERENCES public.items(id);
 
 
 --
@@ -679,6 +904,7 @@ ALTER TABLE ONLY public.users_roles
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261018000009'),
 ('20261018000008'),
 ('20261018000007'),
 ('20261018000006'),

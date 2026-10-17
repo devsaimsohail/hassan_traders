@@ -1,0 +1,5 @@
+<% content_for :title, "Stock" %>
+<% content_for :subtitle, "Every stock in and out, with what it was against" %>
+<% content_for :view_only, "1" unless policy(Item).create? %>
+<%= render "items/tabs" %>
+<%= render "lists/list", list: @list, row_path: ->(move) { record_path_for(move.ref) || item_path(move.item_id) }, actions: render("items/actions") %>

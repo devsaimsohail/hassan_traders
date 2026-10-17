@@ -1,0 +1,38 @@
+<%= form_with model: item, class: "grid gap-4 sm:grid-cols-2" do |f| %>
+  <% if item.errors.any? %>
+    <p class="rounded-lg bg-bad-bg px-3.5 py-2.5 text-[13px] text-bad sm:col-span-2" role="alert"><%= item.errors.full_messages.to_sentence %></p>
+  <% end %>
+  <%= f.label :name, class: "label sm:col-span-2" do %>
+    Item name
+    <%= f.text_field :name, required: true, autofocus: true, placeholder: "e.g. Cotton Yarn 20s", class: "input" %>
+  <% end %>
+  <%= f.label :category, class: "label" do %>
+    Type
+    <%= f.select :category, Item::CATEGORIES.invert, {}, class: "input", disabled: item.persisted? && item.stock_moves.exists? %>
+  <% end %>
+  <%= f.label :unit, class: "label" do %>
+    Unit <span class="hint">kg, meter, pcs, suit…</span>
+    <%= f.text_field :unit, required: true, list: "units", class: "input" %>
+    <datalist id="units"><% Item::UNITS.each do |u| %><option value="<%= u %>"></option><% end %></datalist>
+  <% end %>
+  <%= f.label :rate, class: "label" do %>
+    Purchase rate (Rs) <span class="hint">Per unit. Used for stock value.</span>
+    <%= f.number_field :rate, min: 0, step: 1, class: "input" %>
+  <% end %>
+  <%= f.label :sale_price, class: "label" do %>
+    Sale price (Rs) <span class="hint">Finished goods only</span>
+    <%= f.number_field :sale_price, min: 0, step: 1, class: "input" %>
+  <% end %>
+  <%= f.label :reorder_level, class: "label" do %>
+    Reorder level <span class="hint">At or below this, the item shows as Low</span>
+    <%= f.number_field :reorder_level, min: 0, step: "any", class: "input" %>
+  <% end %>
+  <%= f.label :opening_qty, class: "label" do %>
+    Opening stock <span class="hint"><%= item.persisted? && item.stock_moves.exists? ? "Locked: stock has already moved" : "Stock in hand on the day you start" %></span>
+    <%= f.number_field :opening_qty, min: 0, step: "any", class: "input", disabled: item.persisted? && item.stock_moves.exists? %>
+  <% end %>
+  <div class="flex gap-2 sm:col-span-2">
+    <%= f.submit item.persisted? ? "Save item" : "Add item", class: "btn" %>
+    <%= link_to "Cancel", item.persisted? ? item_path(item) : items_path, class: "btn-ghost" %>
+  </div>
+<% end %>

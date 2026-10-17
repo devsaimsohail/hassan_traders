@@ -1,0 +1,40 @@
+yarn:
+  company: hassan
+  code: R01
+  name: Cotton Yarn 20s
+  category: raw_material
+  unit: kg
+  rate: 720
+  reorder_level: 800
+  opening_qty: 2400
+
+dye:
+  company: hassan
+  code: R02
+  name: Reactive Dye
+  category: raw_material
+  unit: kg
+  rate: 2600
+  reorder_level: 150
+  opening_qty: 100
+
+suit:
+  company: hassan
+  code: P01
+  name: Lawn Suit 3-Piece
+  category: product
+  unit: suit
+  rate: 2350
+  sale_price: 3400
+  reorder_level: 300
+  opening_qty: 900
+
+other_yarn:
+  company: other
+  code: R01
+  name: Other Yarn
+  category: raw_material
+  unit: kg
+  rate: 700
+  reorder_level: 0
+  opening_qty: 50

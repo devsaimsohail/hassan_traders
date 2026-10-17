@@ -55,8 +55,8 @@
       <table class="table">
         <thead>
           <tr>
-            <% list.columns.each do |column| %>
-              <th class="<%= "text-right" if column.right? %> <%= "hidden md:table-cell" if column.optional %>" aria-sort="<%= aria_sort(list, column) %>">
+            <% list.screen_columns.each do |column| %>
+              <th class="<%= "text-right" if column.right? %> <%= "hidden xl:table-cell" if column.optional %>" aria-sort="<%= aria_sort(list, column) %>">
                 <% if column.sort %>
                   <%= link_to "#{column.label}#{sort_marker(list, column)}", url_for(list.sort_params_for(column)), class: "hover:text-ink", data: { turbo_action: "replace" } %>
                 <% else %>
@@ -72,8 +72,8 @@
             <% path = row_path&.call(row) %>
             <tr class="<%= "cursor-pointer hover:bg-hover" if path %> <%= "[&>td:first-child]:shadow-[inset_3px_0_0_var(--color-bad)]" if list.flagged?(row) %>"
                 <%= tag.attributes(data: { controller: "row-link", action: "click->row-link#open", row_link_href_value: path }) if path %>>
-              <% list.columns.each do |column| %>
-                <td class="<%= "text-right font-medium whitespace-nowrap" if column.right? %> <%= "hidden md:table-cell" if column.optional %> <%= "whitespace-nowrap" if column.format.in?([ :date, :datetime ]) %>"><%= list_cell(list, row, column) %></td>
+              <% list.screen_columns.each do |column| %>
+                <td class="<%= "text-right font-medium whitespace-nowrap" if column.right? %> <%= "hidden xl:table-cell" if column.optional %> <%= "whitespace-nowrap" if column.nowrap || column.format.in?([ :date, :datetime ]) %>"><%= list_cell(list, row, column) %></td>
               <% end %>
               <% if row_path %>
                 <td class="w-px pl-0 text-right"><% if path %><%= link_to "›", path, class: "text-lg leading-none text-faint hover:text-brand", aria: { label: "Open" } %><% end %></td>
