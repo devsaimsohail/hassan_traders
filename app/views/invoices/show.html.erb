@@ -1,0 +1,67 @@
+<% inv = @invoice %>
+<% content_for :title, "Bill #{inv.number}" %>
+<% content_for :subtitle, "#{inv.customer.name}#{", #{inv.customer.city}" if inv.customer.city}" %>
+
+<div><%= link_to "← Back to bills", invoices_path, class: "btn-link text-[13px]" %></div>
+
+<% if inv.cancelled? %>
+  <p class="rounded-lg bg-chip px-3.5 py-2.5 text-[13px] text-[#344054]">Cancelled by <%= inv.cancelled_by.name %> on <%= Fmt.datetime(inv.cancelled_at) %>: <%= inv.cancel_reason %></p>
+<% end %>
+
+<section class="card flex flex-col gap-4 p-4" id="invoice">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="flex items-center gap-2.5"><h2 class="text-lg font-semibold">Bill <%= inv.number %></h2><%= pill(inv.status, InvoiceList::STATUS_TONES[inv.status]) %></div>
+    <div class="flex flex-wrap items-center gap-1.5">
+      <%= link_to invoice_path(inv, format: :pdf), class: "btn btn-sm", data: { turbo: false } do %><%= icon(:pdf, classes: "size-4") %> Download PDF<% end %>
+      <% if inv.sales_order && policy(inv.sales_order).show? %><%= link_to "Open order", sales_order_path(inv.sales_order), class: "btn-ghost btn-sm" %><% end %>
+      <% if policy(inv.customer).show? %><%= link_to "Customer", customer_path(inv.customer), class: "btn-ghost btn-sm" %><% end %>
+    </div>
+  </div>
+
+  <%= render "shared/facts", facts: [ [ "Customer", inv.customer.name ], [ "Bill date", Fmt.date(inv.date) ], [ "Due date", Fmt.date(inv.due_date) ],
+        (inv.days_overdue.to_i.positive? && [ "Days late", tag.span("#{inv.days_overdue} days", class: "text-bad") ]),
+        (inv.sales_order && [ "Order", inv.sales_order.number ]), [ "Made by", inv.created_by.name ] ].select(&:itself) %>
+  <%= render "shared/money_strip", figures: [ [ "Bill amount", Fmt.rs(inv.amount) ], [ "Received", Fmt.rs(inv.received), "text-ok" ],
+        [ "Baqaya", Fmt.rs(inv.balance), (inv.balance.positive? && !inv.cancelled? ? "text-bad" : nil) ] ] %>
+
+  <% if policy(inv).extend_due? || policy(inv).cancel? %>
+    <div class="flex flex-col gap-2 border-t border-line-soft pt-3">
+      <% if policy(inv).extend_due? %>
+        <details class="rounded-lg border border-line-soft px-3 py-2">
+          <summary class="cursor-pointer text-[13px] font-medium">Extend due date</summary>
+          <%= form_with url: extend_due_invoice_path(inv), class: "mt-3 flex flex-wrap items-end gap-2" do |f| %>
+            <%= f.label :due_date, class: "label" do %>New due date<%= f.date_field :due_date, min: inv.due_date + 1, value: inv.due_date + 15, required: true, class: "input" %><% end %>
+            <%= f.submit "Move due date", class: "btn-ghost btn-sm" %>
+          <% end %>
+        </details>
+      <% end %>
+      <% if policy(inv).cancel? %>
+        <details class="rounded-lg border border-line-soft px-3 py-2">
+          <summary class="cursor-pointer text-[13px] font-medium text-bad">Cancel this bill</summary>
+          <%= form_with url: cancel_invoice_path(inv), class: "mt-3 flex flex-wrap items-end gap-2" do |f| %>
+            <%= f.label :reason, class: "label min-w-64 flex-1" do %>Reason <span class="hint">Removes it from the customer's udhaar. Stock does not come back.</span><%= f.text_field :reason, required: true, class: "input" %><% end %>
+            <%= f.submit "Cancel bill", class: "btn-ghost btn-sm text-bad" %>
+          <% end %>
+        </details>
+      <% end %>
+    </div>
+  <% end %>
+</section>
+
+<section class="card overflow-hidden" id="invoice-lines">
+  <h2 class="px-4 pt-4 pb-2 text-[15px] font-semibold">Items</h2>
+  <table class="table">
+    <thead><tr><th>Item</th><th class="text-right">Qty</th><th>Unit</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead>
+    <tbody>
+      <% inv.lines.each do |line| %>
+        <tr><td class="whitespace-nowrap"><%= line.item.name %></td><td class="text-right tabular-nums"><%= Fmt.qty(line.qty) %></td><td><%= line.item.unit %></td>
+          <td class="text-right tabular-nums"><%= Fmt.rate(line.rate) %></td><td class="text-right font-medium tabular-nums"><%= Fmt.rs(line.amount) %></td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
+
+<section class="card p-4" id="invoice-payments">
+  <h2 class="text-[15px] font-semibold">Payments against this bill</h2>
+  <p class="mt-1 text-[13px] text-muted">No payment received yet. Receiving payments comes with the next module.</p>
+</section>

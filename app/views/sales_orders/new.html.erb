@@ -1,0 +1,48 @@
+<% content_for :title, "New sales order" %>
+<% content_for :subtitle, "The godown dispatches it, and the bill is made at the same time." %>
+<% so = @sales_order %>
+<% items = Current.company.items.with_stock.where(category: "product").order(:name) %>
+<% customers = Current.company.customers.with_balances.order(:name) %>
+<div class="card max-w-4xl p-5">
+  <%= form_with model: so, url: sales_orders_path, class: "flex flex-col gap-4", data: { controller: "po-lines" } do |f| %>
+    <% if so.errors.any? %>
+      <p class="rounded-lg bg-bad-bg px-3.5 py-2.5 text-[13px] text-bad" role="alert"><%= so.errors.full_messages.to_sentence %></p>
+    <% end %>
+    <div class="grid gap-4 sm:grid-cols-2" data-controller="customer-info">
+      <%= f.label :customer_id, class: "label" do %>
+        Customer
+        <%= f.select :customer_id, customers.map { |c| [ "#{c.name}#{" · #{c.city}" if c.city}", c.id,
+              { data: { balance: Fmt.rs(c.balance), limit: Fmt.rs(c.credit_limit), terms: c.terms_days, note: c.note, over: c.over_limit } } ] },
+              { include_blank: "Choose customer" }, class: "input", required: true, data: { customer_info_target: "select", action: "change->customer-info#show" } %>
+        <span class="hint" data-customer-info-target="info" hidden></span>
+      <% end %>
+      <%= f.label :date, class: "label" do %>Order date<%= f.date_field :date, required: true, class: "input" %><% end %>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <div class="hidden grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-2 text-xs text-muted sm:grid">
+        <span>Item</span><span>Qty</span><span>Rate (Rs)</span><span class="text-right">Amount</span><span class="w-8"></span>
+      </div>
+      <div class="flex flex-col gap-2" data-po-lines-target="lines">
+        <% so.lines.build if so.lines.empty? %>
+        <%= f.fields_for :lines do |lf| %><%= render "sales_orders/line", f: lf, items: %><% end %>
+      </div>
+      <template data-po-lines-target="template">
+        <%= f.fields_for :lines, SalesOrderLine.new, child_index: "NEW_LINE" do |lf| %><%= render "sales_orders/line", f: lf, items: %><% end %>
+      </template>
+      <div><button type="button" class="btn-link text-[13px]" data-action="po-lines#add">+ Add another item</button></div>
+      <p class="hint">The rate fills in from the item's sale price. Change it for this customer if you need to.</p>
+    </div>
+
+    <div class="flex items-baseline justify-end gap-3 border-t border-line-soft pt-3">
+      <span class="text-xs text-muted">Order total</span>
+      <b class="text-xl tabular-nums" data-po-lines-target="total">Rs 0</b>
+    </div>
+
+    <%= f.label :note, class: "label" do %>Note <span class="hint">Optional, e.g. send by Daewoo cargo</span><%= f.text_field :note, class: "input" %><% end %>
+    <div class="flex gap-2">
+      <%= f.submit "Book order", class: "btn" %>
+      <%= link_to "Cancel", sales_orders_path, class: "btn-ghost" %>
+    </div>
+  <% end %>
+</div>

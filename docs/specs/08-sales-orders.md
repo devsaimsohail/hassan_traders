@@ -22,6 +22,8 @@ Pending → Dispatched → Delivered
 3. **Delivered:** marked when the customer confirms receipt (Store Incharge, Sales Officer, Partner).
 4. **Cancel:** Partner only, Pending only. Logged with a reason ("stock not available", "cancelled by party").
 
+**Built:** dispatch always makes the bill in the same transaction, so there is no separate "Make bill" step. Booking past the credit limit shows a warning, not a block. Cancelling is partner-only and needs a reason.
+
 ## Screens
 
 ### Sales orders list

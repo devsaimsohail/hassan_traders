@@ -107,3 +107,37 @@ end
     c.assign_attributes(city:, area:, credit_limit:, terms_days:, opening_balance:, phone: format("0300-55501%02d", i + 1))
   end
 end
+
+if company.sales_orders.none?
+  sales = User.find_by!(mobile: "03001110005")
+  store = User.find_by!(mobile: "03001110004")
+  partner = User.find_by!(mobile: "03001110001")
+  product = ->(name) { company.items.find_by!(name:) }
+  book = lambda do |customer, days_ago, lines|
+    order = company.sales_orders.create!(customer: company.customers.find_by!(name: customer), date: days_ago.days.ago.to_date, booked_by: sales,
+      lines_attributes: lines.map { |name, qty| { item_id: product.(name).id, qty:, rate: product.(name).sale_price } })
+    order.book!(by: sales)
+    order
+  end
+
+  [
+    [ "Khan Brothers", 70, [ [ "Lawn Suit 3-Piece", 80 ], [ "Bedsheet Double (King)", 40 ] ], :delivered ],
+    [ "Ghani Fabrics", 55, [ [ "Cotton Kurta (Men)", 120 ] ], :delivered ],
+    [ "Bismillah Traders", 40, [ [ "Lawn Suit 3-Piece", 100 ] ], :delivered ],
+    [ "Zam Zam Bedsheets", 25, [ [ "Bedsheet Double (King)", 60 ], [ "Towel Set (3 pcs)", 30 ] ], :delivered ],
+    [ "Rehman Cloth House", 9, [ [ "Lawn Suit 3-Piece", 50 ], [ "Cotton Kurta (Men)", 40 ] ], :delivered ],
+    [ "Madni Dupatta House", 3, [ [ "Cotton Kurta (Men)", 30 ] ], :dispatched ],
+    [ "Al-Fatah Garments", 1, [ [ "Lawn Suit 3-Piece", 60 ] ], :pending ],
+    [ "Chaudhry Textile Store", 0, [ [ "Bedsheet Double (King)", 20 ] ], :pending ],
+    [ "Haq Bahu Collection", 12, [ [ "Towel Set (3 pcs)", 40 ] ], :cancelled ]
+  ].each do |customer, days_ago, lines, state|
+    order = book.(customer, days_ago, lines)
+    case state
+    when :cancelled then order.cancel!(by: partner, reason: "Customer is over the credit limit")
+    when :pending then next
+    else
+      order.dispatch!(by: store, on: [ days_ago - 1, 0 ].max.days.ago.to_date)
+      order.deliver!(by: store, on: [ days_ago - 3, 0 ].max.days.ago.to_date) if state == :delivered
+    end
+  end
+end

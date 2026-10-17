@@ -1,0 +1,3 @@
+<% content_for :title, "Bills" %>
+<% content_for :subtitle, "Bills given to customers, what came in and what is still due. Click a bill to see it or download it." %>
+<%= render "lists/list", list: @list, row_path: ->(inv) { invoice_path(inv) } %>

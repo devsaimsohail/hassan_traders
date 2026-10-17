@@ -21,6 +21,8 @@ The bill is what the customer owes for a dispatch. It drives udhaar, due dates, 
   - else `Unpaid`
 - days_overdue = today − due_date when Overdue, else 0
 
+**Built so far:** "Received" is 0 until payments (10) exist. `Invoice::RECEIVED` is where they plug in. Status and days late are worked out in SQL for a given date (`Invoice.with_status(on)`), so "overdue" always follows today's date.
+
 ## Rules
 
 - Bills are created by dispatching an order (08), copying its lines. A manual bill for walk-in sales can be added later.

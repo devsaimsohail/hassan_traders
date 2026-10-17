@@ -275,6 +275,82 @@ ALTER SEQUENCE public.customers_id_seq OWNED BY public.customers.id;
 
 
 --
+-- Name: invoice_lines; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.invoice_lines (
+    id bigint NOT NULL,
+    invoice_id bigint NOT NULL,
+    item_id bigint NOT NULL,
+    qty numeric(12,3) NOT NULL,
+    rate numeric(12,2) NOT NULL,
+    amount integer NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: invoice_lines_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.invoice_lines_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: invoice_lines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.invoice_lines_id_seq OWNED BY public.invoice_lines.id;
+
+
+--
+-- Name: invoices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.invoices (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    customer_id bigint NOT NULL,
+    sales_order_id bigint,
+    number character varying NOT NULL,
+    date date NOT NULL,
+    due_date date NOT NULL,
+    amount integer NOT NULL,
+    created_by_id bigint NOT NULL,
+    cancelled_by_id bigint,
+    cancelled_at timestamp(6) without time zone,
+    cancel_reason character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: invoices_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.invoices_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: invoices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.invoices_id_seq OWNED BY public.invoices.id;
+
+
+--
 -- Name: items; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -465,6 +541,88 @@ CREATE SEQUENCE public.roles_id_seq
 --
 
 ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
+
+
+--
+-- Name: sales_order_lines; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sales_order_lines (
+    id bigint NOT NULL,
+    sales_order_id bigint NOT NULL,
+    item_id bigint NOT NULL,
+    qty numeric(12,3) NOT NULL,
+    rate numeric(12,2) NOT NULL,
+    amount integer NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT sales_order_lines_values CHECK (((qty > (0)::numeric) AND (rate >= (0)::numeric)))
+);
+
+
+--
+-- Name: sales_order_lines_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.sales_order_lines_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: sales_order_lines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.sales_order_lines_id_seq OWNED BY public.sales_order_lines.id;
+
+
+--
+-- Name: sales_orders; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sales_orders (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    customer_id bigint NOT NULL,
+    number character varying NOT NULL,
+    date date NOT NULL,
+    status character varying DEFAULT 'pending'::character varying NOT NULL,
+    amount integer DEFAULT 0 NOT NULL,
+    note character varying,
+    booked_by_id bigint NOT NULL,
+    dispatched_on date,
+    dispatched_by_id bigint,
+    delivered_on date,
+    delivered_by_id bigint,
+    cancelled_by_id bigint,
+    cancelled_at timestamp(6) without time zone,
+    cancel_reason character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT sales_orders_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'dispatched'::character varying, 'delivered'::character varying, 'cancelled'::character varying])::text[])))
+);
+
+
+--
+-- Name: sales_orders_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.sales_orders_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: sales_orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.sales_orders_id_seq OWNED BY public.sales_orders.id;
 
 
 --
@@ -690,6 +848,20 @@ ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.cu
 
 
 --
+-- Name: invoice_lines id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoice_lines ALTER COLUMN id SET DEFAULT nextval('public.invoice_lines_id_seq'::regclass);
+
+
+--
+-- Name: invoices id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoices ALTER COLUMN id SET DEFAULT nextval('public.invoices_id_seq'::regclass);
+
+
+--
 -- Name: items id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -722,6 +894,20 @@ ALTER TABLE ONLY public.role_permissions ALTER COLUMN id SET DEFAULT nextval('pu
 --
 
 ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_id_seq'::regclass);
+
+
+--
+-- Name: sales_order_lines id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_order_lines ALTER COLUMN id SET DEFAULT nextval('public.sales_order_lines_id_seq'::regclass);
+
+
+--
+-- Name: sales_orders id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_orders ALTER COLUMN id SET DEFAULT nextval('public.sales_orders_id_seq'::regclass);
 
 
 --
@@ -809,6 +995,22 @@ ALTER TABLE ONLY public.customers
 
 
 --
+-- Name: invoice_lines invoice_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoice_lines
+    ADD CONSTRAINT invoice_lines_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: invoices invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoices
+    ADD CONSTRAINT invoices_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: items items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -846,6 +1048,22 @@ ALTER TABLE ONLY public.role_permissions
 
 ALTER TABLE ONLY public.roles
     ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sales_order_lines sales_order_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_order_lines
+    ADD CONSTRAINT sales_order_lines_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sales_orders sales_orders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_orders
+    ADD CONSTRAINT sales_orders_pkey PRIMARY KEY (id);
 
 
 --
@@ -956,6 +1174,76 @@ CREATE UNIQUE INDEX index_customers_on_company_id_and_code ON public.customers U
 --
 
 CREATE UNIQUE INDEX index_customers_on_company_id_and_name ON public.customers USING btree (company_id, name);
+
+
+--
+-- Name: index_invoice_lines_on_invoice_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_invoice_lines_on_invoice_id ON public.invoice_lines USING btree (invoice_id);
+
+
+--
+-- Name: index_invoice_lines_on_item_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_invoice_lines_on_item_id ON public.invoice_lines USING btree (item_id);
+
+
+--
+-- Name: index_invoices_on_cancelled_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_invoices_on_cancelled_by_id ON public.invoices USING btree (cancelled_by_id);
+
+
+--
+-- Name: index_invoices_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_invoices_on_company_id ON public.invoices USING btree (company_id);
+
+
+--
+-- Name: index_invoices_on_company_id_and_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_invoices_on_company_id_and_date ON public.invoices USING btree (company_id, date);
+
+
+--
+-- Name: index_invoices_on_company_id_and_number; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_invoices_on_company_id_and_number ON public.invoices USING btree (company_id, number);
+
+
+--
+-- Name: index_invoices_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_invoices_on_created_by_id ON public.invoices USING btree (created_by_id);
+
+
+--
+-- Name: index_invoices_on_customer_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_invoices_on_customer_id ON public.invoices USING btree (customer_id);
+
+
+--
+-- Name: index_invoices_on_customer_id_and_due_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_invoices_on_customer_id_and_due_date ON public.invoices USING btree (customer_id, due_date);
+
+
+--
+-- Name: index_invoices_on_sales_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_invoices_on_sales_order_id ON public.invoices USING btree (sales_order_id);
 
 
 --
@@ -1082,6 +1370,76 @@ CREATE UNIQUE INDEX index_roles_on_name_and_resource_type_and_resource_id ON pub
 --
 
 CREATE INDEX index_roles_on_resource ON public.roles USING btree (resource_type, resource_id);
+
+
+--
+-- Name: index_sales_order_lines_on_item_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sales_order_lines_on_item_id ON public.sales_order_lines USING btree (item_id);
+
+
+--
+-- Name: index_sales_order_lines_on_sales_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sales_order_lines_on_sales_order_id ON public.sales_order_lines USING btree (sales_order_id);
+
+
+--
+-- Name: index_sales_orders_on_booked_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sales_orders_on_booked_by_id ON public.sales_orders USING btree (booked_by_id);
+
+
+--
+-- Name: index_sales_orders_on_cancelled_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sales_orders_on_cancelled_by_id ON public.sales_orders USING btree (cancelled_by_id);
+
+
+--
+-- Name: index_sales_orders_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sales_orders_on_company_id ON public.sales_orders USING btree (company_id);
+
+
+--
+-- Name: index_sales_orders_on_company_id_and_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sales_orders_on_company_id_and_date ON public.sales_orders USING btree (company_id, date);
+
+
+--
+-- Name: index_sales_orders_on_company_id_and_number; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_sales_orders_on_company_id_and_number ON public.sales_orders USING btree (company_id, number);
+
+
+--
+-- Name: index_sales_orders_on_customer_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sales_orders_on_customer_id ON public.sales_orders USING btree (customer_id);
+
+
+--
+-- Name: index_sales_orders_on_delivered_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sales_orders_on_delivered_by_id ON public.sales_orders USING btree (delivered_by_id);
+
+
+--
+-- Name: index_sales_orders_on_dispatched_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_sales_orders_on_dispatched_by_id ON public.sales_orders USING btree (dispatched_by_id);
 
 
 --
@@ -1232,6 +1590,30 @@ CREATE TRIGGER supplier_payments_append_only BEFORE DELETE OR UPDATE ON public.s
 
 
 --
+-- Name: invoices fk_rails_00f2fc9b72; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoices
+    ADD CONSTRAINT fk_rails_00f2fc9b72 FOREIGN KEY (cancelled_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: sales_order_lines fk_rails_07c41810c7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_order_lines
+    ADD CONSTRAINT fk_rails_07c41810c7 FOREIGN KEY (item_id) REFERENCES public.items(id);
+
+
+--
+-- Name: invoices fk_rails_0d349e632f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoices
+    ADD CONSTRAINT fk_rails_0d349e632f FOREIGN KEY (customer_id) REFERENCES public.customers(id);
+
+
+--
 -- Name: supplier_payments fk_rails_1846f352d5; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1240,11 +1622,27 @@ ALTER TABLE ONLY public.supplier_payments
 
 
 --
+-- Name: sales_orders fk_rails_1a7fd809a8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_orders
+    ADD CONSTRAINT fk_rails_1a7fd809a8 FOREIGN KEY (customer_id) REFERENCES public.customers(id);
+
+
+--
 -- Name: purchase_orders fk_rails_1d67bb2d7b; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.purchase_orders
     ADD CONSTRAINT fk_rails_1d67bb2d7b FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id);
+
+
+--
+-- Name: sales_orders fk_rails_1ea6611c18; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_orders
+    ADD CONSTRAINT fk_rails_1ea6611c18 FOREIGN KEY (dispatched_by_id) REFERENCES public.users(id);
 
 
 --
@@ -1264,11 +1662,27 @@ ALTER TABLE ONLY public.purchase_orders
 
 
 --
+-- Name: sales_orders fk_rails_32201b9278; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_orders
+    ADD CONSTRAINT fk_rails_32201b9278 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: purchase_orders fk_rails_3c1ce09582; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.purchase_orders
     ADD CONSTRAINT fk_rails_3c1ce09582 FOREIGN KEY (approved_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: invoices fk_rails_433d4c368d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoices
+    ADD CONSTRAINT fk_rails_433d4c368d FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -1312,6 +1726,22 @@ ALTER TABLE ONLY public.supplier_payments
 
 
 --
+-- Name: sales_orders fk_rails_6a9d44aead; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_orders
+    ADD CONSTRAINT fk_rails_6a9d44aead FOREIGN KEY (booked_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: invoices fk_rails_6d5296f05d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoices
+    ADD CONSTRAINT fk_rails_6d5296f05d FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: purchase_orders fk_rails_7139e543c2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1333,6 +1763,22 @@ ALTER TABLE ONLY public.purchase_order_lines
 
 ALTER TABLE ONLY public.role_permissions
     ADD CONSTRAINT fk_rails_81b1f496e0 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: sales_orders fk_rails_923dc9512a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_orders
+    ADD CONSTRAINT fk_rails_923dc9512a FOREIGN KEY (cancelled_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: invoice_lines fk_rails_93b334df88; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoice_lines
+    ADD CONSTRAINT fk_rails_93b334df88 FOREIGN KEY (invoice_id) REFERENCES public.invoices(id);
 
 
 --
@@ -1400,6 +1846,14 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: invoices fk_rails_c83e110d93; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoices
+    ADD CONSTRAINT fk_rails_c83e110d93 FOREIGN KEY (sales_order_id) REFERENCES public.sales_orders(id);
+
+
+--
 -- Name: activity_logs fk_rails_c9badf82db; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1432,11 +1886,27 @@ ALTER TABLE ONLY public.purchase_orders
 
 
 --
+-- Name: sales_order_lines fk_rails_e3a8c2303b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_order_lines
+    ADD CONSTRAINT fk_rails_e3a8c2303b FOREIGN KEY (sales_order_id) REFERENCES public.sales_orders(id);
+
+
+--
 -- Name: users_roles fk_rails_eb7b4658f8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users_roles
     ADD CONSTRAINT fk_rails_eb7b4658f8 FOREIGN KEY (role_id) REFERENCES public.roles(id);
+
+
+--
+-- Name: sales_orders fk_rails_eeb167b3b4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sales_orders
+    ADD CONSTRAINT fk_rails_eeb167b3b4 FOREIGN KEY (delivered_by_id) REFERENCES public.users(id);
 
 
 --
@@ -1448,12 +1918,21 @@ ALTER TABLE ONLY public.customers
 
 
 --
+-- Name: invoice_lines fk_rails_f397dcf950; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.invoice_lines
+    ADD CONSTRAINT fk_rails_f397dcf950 FOREIGN KEY (item_id) REFERENCES public.items(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261018000012'),
 ('20261018000011'),
 ('20261018000010'),
 ('20261018000009'),

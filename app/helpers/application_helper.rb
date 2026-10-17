@@ -23,6 +23,8 @@ module ApplicationHelper
       { label: "Purchase orders", icon: :purchases, path: :purchase_orders_path, permission: :purchase_create, match: "/purchases" }
     ] ],
     [ "Sales and money", [
+      { label: "Sales orders", icon: :sales, path: :sales_orders_path, permission: :sales, match: "/orders" },
+      { label: "Bills", icon: :invoices, path: :invoices_path, permission: :invoices, match: "/bills" },
       { label: "Customers", icon: :customers, path: :customers_path, permission: :khata, match: "/customers" }
     ] ],
     [ "Admin", [
@@ -56,6 +58,12 @@ module ApplicationHelper
     elsif ref.match?(/\AC\d+\z/) && Current.access.sees?(:khata)
       @customer_ids_by_code ||= Current.company.customers.pluck(:code, :id).to_h
       customer_path(@customer_ids_by_code[ref]) if @customer_ids_by_code[ref]
+    elsif ref.match?(/\ASO-\d+\z/) && Current.access.sees?(:sales)
+      @so_ids_by_number ||= Current.company.sales_orders.pluck(:number, :id).to_h
+      sales_order_path(@so_ids_by_number[ref]) if @so_ids_by_number[ref]
+    elsif ref.match?(/\AINV-\d+\z/) && Current.access.sees?(:invoices)
+      @invoice_ids_by_number ||= Current.company.invoices.pluck(:number, :id).to_h
+      invoice_path(@invoice_ids_by_number[ref]) if @invoice_ids_by_number[ref]
     elsif ref.match?(/\APO-\d+\z/) && Current.access.sees?(:purchase_create)
       @po_ids_by_number ||= Current.company.purchase_orders.pluck(:number, :id).to_h
       purchase_order_path(@po_ids_by_number[ref]) if @po_ids_by_number[ref]

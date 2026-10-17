@@ -10,7 +10,10 @@
       <h2 class="text-lg font-semibold"><%= c.name %></h2>
       <%= pill("Over credit limit", "pill-bad") if c.over_limit == "Yes" %>
     </div>
-    <% if policy(c).update? %><%= link_to "Edit details", edit_customer_path(c), class: "btn-ghost btn-sm" %><% end %>
+    <div class="flex flex-wrap gap-1.5">
+      <% if policy(SalesOrder).create? %><%= link_to new_sales_order_path(customer_id: c.id), class: "btn btn-sm" do %><%= icon(:plus, classes: "size-4") %> New order<% end %><% end %>
+      <% if policy(c).update? %><%= link_to "Edit details", edit_customer_path(c), class: "btn-ghost btn-sm" %><% end %>
+    </div>
   </div>
 
   <dl class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-x-5 gap-y-3">
@@ -34,5 +37,47 @@
       </div>
     <% end %>
   </div>
-  <p class="hint">Bills, payments and the khata for this customer appear here once those modules are built.</p>
+  <p class="hint">Payments and the khata for this customer appear here once those modules are built.</p>
 </section>
+
+<% if policy(Invoice).index? %>
+  <section class="card overflow-hidden" id="unpaid-bills">
+    <div class="flex items-baseline justify-between gap-3 px-4 pt-4 pb-2"><h2 class="text-[15px] font-semibold">Unpaid bills</h2><span class="text-xs text-muted">Oldest due date first</span></div>
+    <% if @unpaid_bills.any? %>
+      <table class="table">
+        <thead><tr><th>Bill #</th><th>Date</th><th>Due</th><th class="text-right">Baqaya</th><th>Status</th></tr></thead>
+        <tbody>
+          <% @unpaid_bills.each do |bill| %>
+            <tr class="cursor-pointer hover:bg-hover" data-controller="row-link" data-action="click->row-link#open" data-row-link-href-value="<%= invoice_path(bill) %>">
+              <td class="whitespace-nowrap"><%= bill.number %></td><td class="whitespace-nowrap"><%= Fmt.date(bill.date) %></td><td class="whitespace-nowrap"><%= Fmt.date(bill.due_date) %></td>
+              <td class="text-right font-medium tabular-nums"><%= Fmt.rs(bill.balance) %></td><td><%= pill(bill.status, InvoiceList::STATUS_TONES[bill.status]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="px-4 pb-4 text-muted">No unpaid bills.</p>
+    <% end %>
+  </section>
+<% end %>
+
+<% if policy(SalesOrder).index? %>
+  <section class="card overflow-hidden" id="latest-orders">
+    <h2 class="px-4 pt-4 pb-2 text-[15px] font-semibold">Latest orders</h2>
+    <% if @orders.any? %>
+      <table class="table">
+        <thead><tr><th>Order #</th><th>Date</th><th class="text-right">Amount</th><th>Status</th></tr></thead>
+        <tbody>
+          <% @orders.each do |order| %>
+            <tr class="cursor-pointer hover:bg-hover" data-controller="row-link" data-action="click->row-link#open" data-row-link-href-value="<%= sales_order_path(order) %>">
+              <td class="whitespace-nowrap"><%= order.number %></td><td class="whitespace-nowrap"><%= Fmt.date(order.date) %></td>
+              <td class="text-right font-medium tabular-nums"><%= Fmt.rs(order.amount) %></td><td><%= pill(order.status_label, SalesOrderList::STATUS_TONES[order.status_label]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="px-4 pb-4 text-muted">No orders yet.</p>
+    <% end %>
+  </section>
+<% end %>

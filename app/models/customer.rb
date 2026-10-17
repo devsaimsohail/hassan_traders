@@ -1,24 +1,32 @@
 class Customer < ApplicationRecord
-  BILLED = "0".freeze
   RECEIVED = "0".freeze
-  OVERDUE = "0".freeze
   LAST_PAYMENT = "NULL::date".freeze
-  BALANCE = "(customers.opening_balance + #{BILLED} - #{RECEIVED})".freeze
-  WITH_BALANCES = <<~SQL.squish.freeze
-    (SELECT customers.*,
-      #{BILLED} AS billed,
-      #{RECEIVED} AS received,
-      #{BALANCE} AS balance,
-      #{OVERDUE} AS overdue,
-      #{LAST_PAYMENT} AS last_payment,
-      CASE WHEN #{BALANCE} > customers.credit_limit THEN 'Yes' ELSE 'No' END AS over_limit
-    FROM customers) AS customers
-  SQL
   EDITABLE = %w[name city area phone credit_limit terms_days note].freeze
 
   belongs_to :company
+  has_many :sales_orders, dependent: :restrict_with_exception
+  has_many :invoices, dependent: :restrict_with_exception
 
-  scope :with_balances, -> { from(WITH_BALANCES) }
+  scope :with_balances, ->(on = Date.current) { from("#{balances_sql(on)} AS customers") }
+
+  def self.balances_sql(on)
+    balance = "(customers.opening_balance + COALESCE(b.billed, 0) - #{RECEIVED})"
+    <<~SQL.squish
+      (SELECT customers.*,
+        COALESCE(b.billed, 0) AS billed,
+        #{RECEIVED} AS received,
+        #{balance} AS balance,
+        COALESCE(b.overdue, 0) AS overdue,
+        #{LAST_PAYMENT} AS last_payment,
+        CASE WHEN #{balance} > customers.credit_limit THEN 'Yes' ELSE 'No' END AS over_limit
+      FROM customers
+      LEFT JOIN (
+        SELECT customer_id, SUM(amount) AS billed, SUM(balance) FILTER (WHERE status = 'Overdue') AS overdue
+        FROM #{Invoice.status_table_sql(on)} AS bills
+        WHERE cancelled_at IS NULL GROUP BY customer_id
+      ) b ON b.customer_id = customers.id)
+    SQL
+  end
 
   normalizes :name, :city, :area, with: ->(v) { v.strip.squeeze(" ").presence }
   normalizes :phone, with: ->(v) { v.strip.presence }

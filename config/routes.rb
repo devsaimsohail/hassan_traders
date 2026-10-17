@@ -32,6 +32,19 @@ Rails.application.routes.draw do
   end
 
   resources :customers, except: :destroy
+  resources :sales_orders, path: "orders", only: %i[ index show new create ] do
+    member do
+      post :dispatch_goods, path: "dispatch"
+      post :deliver
+      post :cancel
+    end
+  end
+  resources :invoices, path: "bills", only: %i[ index show ] do
+    member do
+      post :extend_due
+      post :cancel
+    end
+  end
 
   get "stock", to: redirect("/stock/items")
   scope "stock" do

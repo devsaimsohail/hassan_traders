@@ -14,6 +14,8 @@ class CustomersController < ApplicationController
   end
 
   def show
+    @unpaid_bills = Current.company.invoices.with_status.where(customer_id: @customer.id, cancelled_at: nil).where("invoices.balance > 0").order(:due_date)
+    @orders = @customer.sales_orders.order(date: :desc, id: :desc).limit(8)
   end
 
   def new

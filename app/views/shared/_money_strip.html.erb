@@ -1,0 +1,9 @@
+<%# locals: (figures:) %>
+<div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] rounded-lg border border-line-soft bg-[#FAFBFC]">
+  <% figures.compact.each do |label, value, tone| %>
+    <div class="border-l border-line-soft px-3.5 py-2.5 first:border-l-0">
+      <div class="text-xs text-muted"><%= label %></div>
+      <div class="text-lg font-semibold tabular-nums whitespace-nowrap <%= tone %>"><%= value %></div>
+    </div>
+  <% end %>
+</div>
