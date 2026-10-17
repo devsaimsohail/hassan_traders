@@ -24,6 +24,28 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  test "the add and edit item forms open for people who can change stock" do
+    sign_in_as users(:store)
+
+    get new_item_path
+    assert_response :success
+    assert_select "input[name='item[name]']"
+
+    get edit_item_path(items(:yarn))
+    assert_response :success
+    assert_select "input[name='item[rate]'][value='720']"
+  end
+
+  test "an accountant cannot open the add or edit forms" do
+    sign_in_as users(:accountant)
+
+    get new_item_path
+    assert_response :forbidden
+
+    get edit_item_path(items(:yarn))
+    assert_response :forbidden
+  end
+
   test "a partner adds an item and it is logged" do
     sign_in_as users(:partner)
     post items_path, params: { item: { name: "Buttons", category: "raw_material", unit: "gross", rate: 450, reorder_level: 40, opening_qty: 120 } }
