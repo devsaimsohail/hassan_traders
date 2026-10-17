@@ -50,6 +50,13 @@ module ApplicationHelper
     end
   end
 
+  def field_number(record, attribute)
+    value = record.public_send(attribute)
+    return if value.nil? || (record.new_record? && value.zero? && !record.errors.key?(attribute))
+
+    value.to_d.to_s("F").delete_suffix(".0")
+  end
+
   def person_policy(person)
     PersonPolicy.new(Current.access, person)
   end

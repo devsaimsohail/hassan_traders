@@ -36,6 +36,17 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='item[rate]'][value='720']"
   end
 
+  test "the sale price only shows for finished goods" do
+    sign_in_as users(:partner)
+
+    get new_item_path
+    assert_select "input[name='item[category]'][value='raw_material'][checked]"
+    assert_select "[data-item-form-target='productOnly'][hidden] input[name='item[sale_price]'][disabled]"
+
+    get edit_item_path(items(:suit))
+    assert_select "[data-item-form-target='productOnly']:not([hidden]) input[name='item[sale_price]']:not([disabled])"
+  end
+
   test "an accountant cannot open the add or edit forms" do
     sign_in_as users(:accountant)
 
