@@ -26,6 +26,8 @@ Keep every wholesale customer with their credit terms, and show at a glance how 
 - last_payment = date of their latest payment
 - over_limit = balance > credit_limit
 
+**Built so far:** billed, received, overdue and last payment are 0 or empty until bills (09) and payments (10) exist. `Customer::WITH_BALANCES` computes every balance in SQL, and those modules plug their sums into it.
+
 ## Rules
 
 - Changing the credit limit is Partner-only and logs old → new.

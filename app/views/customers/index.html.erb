@@ -1,0 +1,5 @@
+<% content_for :title, "Customers" %>
+<% content_for :subtitle, "How much each customer owes. Click a customer to see their details." %>
+<% content_for :view_only, "1" unless policy(Customer).create? %>
+<%= render "lists/list", list: @list, row_path: ->(c) { customer_path(c) },
+      actions: (link_to(new_customer_path, class: "btn btn-sm") { icon(:plus, classes: "size-4") + " Add customer" } if policy(Customer).create?) %>

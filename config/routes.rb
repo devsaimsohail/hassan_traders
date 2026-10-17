@@ -31,6 +31,8 @@ Rails.application.routes.draw do
     resources :suppliers, except: %i[ show destroy ]
   end
 
+  resources :customers, except: :destroy
+
   get "stock", to: redirect("/stock/items")
   scope "stock" do
     resources :items, except: :destroy

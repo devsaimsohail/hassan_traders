@@ -1,0 +1,36 @@
+khan:
+  company: hassan
+  code: C01
+  name: Khan Brothers
+  city: Peshawar
+  area: Qissa Khwani
+  phone: 0333-5550101
+  credit_limit: 1500000
+  terms_days: 45
+  opening_balance: 520000
+
+haq:
+  company: hassan
+  code: C02
+  name: Haq Bahu Collection
+  city: Sargodha
+  credit_limit: 300000
+  terms_days: 30
+  opening_balance: 340000
+
+rehman:
+  company: hassan
+  code: C03
+  name: Rehman Cloth House
+  city: Lahore
+  credit_limit: 1500000
+  terms_days: 30
+  opening_balance: 0
+
+other_customer:
+  company: other
+  code: C01
+  name: Other Customer
+  credit_limit: 0
+  terms_days: 30
+  opening_balance: 0

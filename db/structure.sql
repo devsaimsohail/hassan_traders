@@ -234,6 +234,47 @@ ALTER SEQUENCE public.companies_id_seq OWNED BY public.companies.id;
 
 
 --
+-- Name: customers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.customers (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    code character varying NOT NULL,
+    name character varying NOT NULL,
+    city character varying,
+    area character varying,
+    phone character varying,
+    credit_limit integer DEFAULT 0 NOT NULL,
+    terms_days integer DEFAULT 30 NOT NULL,
+    opening_balance integer DEFAULT 0 NOT NULL,
+    note character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT customers_limits CHECK (((credit_limit >= 0) AND (terms_days >= 0)))
+);
+
+
+--
+-- Name: customers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.customers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: customers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.customers_id_seq OWNED BY public.customers.id;
+
+
+--
 -- Name: items; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -642,6 +683,13 @@ ALTER TABLE ONLY public.companies ALTER COLUMN id SET DEFAULT nextval('public.co
 
 
 --
+-- Name: customers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.customers_id_seq'::regclass);
+
+
+--
 -- Name: items id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -750,6 +798,14 @@ ALTER TABLE ONLY public.ar_internal_metadata
 
 ALTER TABLE ONLY public.companies
     ADD CONSTRAINT companies_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: customers customers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customers
+    ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
 
 
 --
@@ -879,6 +935,27 @@ CREATE INDEX index_activity_logs_on_company_id_and_created_at ON public.activity
 --
 
 CREATE INDEX index_activity_logs_on_user_id ON public.activity_logs USING btree (user_id);
+
+
+--
+-- Name: index_customers_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_customers_on_company_id ON public.customers USING btree (company_id);
+
+
+--
+-- Name: index_customers_on_company_id_and_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_customers_on_company_id_and_code ON public.customers USING btree (company_id, code);
+
+
+--
+-- Name: index_customers_on_company_id_and_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_customers_on_company_id_and_name ON public.customers USING btree (company_id, name);
 
 
 --
@@ -1363,12 +1440,21 @@ ALTER TABLE ONLY public.users_roles
 
 
 --
+-- Name: customers fk_rails_ef51a916ef; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customers
+    ADD CONSTRAINT fk_rails_ef51a916ef FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261018000011'),
 ('20261018000010'),
 ('20261018000009'),
 ('20261018000008'),

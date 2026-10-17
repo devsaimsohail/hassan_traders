@@ -1,0 +1,27 @@
+<% can_limit = policy(customer).change_credit_limit? || customer.new_record? %>
+<%= form_with model: customer, class: "grid gap-4 sm:grid-cols-2" do |f| %>
+  <% if customer.errors.any? %>
+    <p class="rounded-lg bg-bad-bg px-3.5 py-2.5 text-[13px] text-bad sm:col-span-2" role="alert"><%= customer.errors.full_messages.to_sentence %></p>
+  <% end %>
+  <%= f.label :name, class: "label sm:col-span-2" do %>Customer name<%= f.text_field :name, required: true, autofocus: customer.new_record?, placeholder: "e.g. Khan Brothers", class: "input" %><% end %>
+  <%= f.label :city, class: "label" do %>City<%= f.text_field :city, placeholder: "e.g. Peshawar", class: "input" %><% end %>
+  <%= f.label :area, class: "label" do %>Area / market <span class="hint">Optional</span><%= f.text_field :area, placeholder: "e.g. Qissa Khwani", class: "input" %><% end %>
+  <%= f.label :phone, class: "label" do %>Mobile<%= f.telephone_field :phone, placeholder: "0300-1234567", class: "input" %><% end %>
+  <%= f.label :terms_days, class: "label" do %>
+    Payment terms (days) <span class="hint">Bills are due this many days after the bill date</span>
+    <%= f.number_field :terms_days, min: 0, step: 1, class: "input" %>
+  <% end %>
+  <%= f.label :credit_limit, class: "label" do %>
+    Credit limit (Rs) <span class="hint"><%= can_limit ? "The most udhaar you allow this customer" : "Only a partner can change this" %></span>
+    <%= f.number_field :credit_limit, min: 0, step: 1, value: (customer.credit_limit unless customer.new_record? && customer.credit_limit.zero?), placeholder: "0", class: "input", disabled: !can_limit %>
+  <% end %>
+  <%= f.label :opening_balance, class: "label" do %>
+    Opening balance (Rs) <span class="hint"><%= customer.new_record? ? "Udhaar they already owe today. Becomes the first line of their khata." : "Set when the customer was added" %></span>
+    <%= f.number_field :opening_balance, min: 0, step: 1, value: (customer.opening_balance unless customer.new_record? && customer.opening_balance.zero?), placeholder: "0", class: "input", disabled: customer.persisted? %>
+  <% end %>
+  <%= f.label :note, class: "label sm:col-span-2" do %>Note <span class="hint">Optional, e.g. "No new orders until Rs 5 lakh received"</span><%= f.text_field :note, class: "input" %><% end %>
+  <div class="flex gap-2 sm:col-span-2">
+    <%= f.submit customer.persisted? ? "Save customer" : "Add customer", class: "btn" %>
+    <%= link_to "Cancel", customer.persisted? ? customer_path(customer) : customers_path, class: "btn-ghost" %>
+  </div>
+<% end %>

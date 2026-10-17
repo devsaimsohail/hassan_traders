@@ -22,6 +22,9 @@ module ApplicationHelper
       { label: "Stock", icon: :stock, path: :items_path, permission: :stock, match: "/stock" },
       { label: "Purchase orders", icon: :purchases, path: :purchase_orders_path, permission: :purchase_create, match: "/purchases" }
     ] ],
+    [ "Sales and money", [
+      { label: "Customers", icon: :customers, path: :customers_path, permission: :khata, match: "/customers" }
+    ] ],
     [ "Admin", [
       { label: "Activity log", icon: :activity, path: :activity_logs_path, permission: :activity_log },
       { label: "Settings", icon: :settings, path: :settings_path, permission: :settings }
@@ -50,6 +53,9 @@ module ApplicationHelper
     if ref.match?(/\A[RP]\d+\z/) && Current.access.sees?(:stock)
       @item_ids_by_code ||= Current.company.items.pluck(:code, :id).to_h
       item_path(@item_ids_by_code[ref]) if @item_ids_by_code[ref]
+    elsif ref.match?(/\AC\d+\z/) && Current.access.sees?(:khata)
+      @customer_ids_by_code ||= Current.company.customers.pluck(:code, :id).to_h
+      customer_path(@customer_ids_by_code[ref]) if @customer_ids_by_code[ref]
     elsif ref.match?(/\APO-\d+\z/) && Current.access.sees?(:purchase_create)
       @po_ids_by_number ||= Current.company.purchase_orders.pluck(:number, :id).to_h
       purchase_order_path(@po_ids_by_number[ref]) if @po_ids_by_number[ref]

@@ -1,0 +1,38 @@
+<% c = @customer %>
+<% content_for :title, c.name %>
+<% content_for :subtitle, [ c.place.presence, "code #{c.code}" ].compact.join(" · ") %>
+
+<div><%= link_to "← Back to customers", customers_path, class: "btn-link text-[13px]" %></div>
+
+<section class="card flex flex-col gap-4 p-4" id="customer">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="flex items-center gap-2.5">
+      <h2 class="text-lg font-semibold"><%= c.name %></h2>
+      <%= pill("Over credit limit", "pill-bad") if c.over_limit == "Yes" %>
+    </div>
+    <% if policy(c).update? %><%= link_to "Edit details", edit_customer_path(c), class: "btn-ghost btn-sm" %><% end %>
+  </div>
+
+  <dl class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-x-5 gap-y-3">
+    <% [ [ "Mobile", c.phone.presence || "Not set" ], [ "City", c.city.presence || "Not set" ], [ "Credit limit", Fmt.rs(c.credit_limit) ],
+         [ "Payment terms", "#{c.terms_days} days" ], [ "Opening balance", Fmt.rs(c.opening_balance) ],
+         [ "Last payment", c.last_payment ? Fmt.date(c.last_payment) : "None yet" ] ].each do |label, value| %>
+      <div><dt class="text-xs text-muted"><%= label %></dt><dd class="font-medium"><%= value %></dd></div>
+    <% end %>
+  </dl>
+
+  <% if c.note.present? %>
+    <p class="rounded-lg bg-warn-bg px-3.5 py-2.5 text-[13px] text-warn"><%= c.note %></p>
+  <% end %>
+
+  <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] rounded-lg border border-line-soft bg-[#FAFBFC]">
+    <% [ [ "Total bills", Fmt.rs(c.billed), nil ], [ "Received", Fmt.rs(c.received), "text-ok" ],
+         [ "Owes you", Fmt.rs(c.balance), (c.balance.positive? ? "text-bad" : nil) ], [ "Past due", Fmt.rs(c.overdue), (c.overdue.positive? ? "text-bad" : nil) ] ].each do |label, value, tone| %>
+      <div class="border-l border-line-soft px-3.5 py-2.5 first:border-l-0">
+        <div class="text-xs text-muted"><%= label %></div>
+        <div class="text-lg font-semibold tabular-nums whitespace-nowrap <%= tone %>"><%= value %></div>
+      </div>
+    <% end %>
+  </div>
+  <p class="hint">Bills, payments and the khata for this customer appear here once those modules are built.</p>
+</section>

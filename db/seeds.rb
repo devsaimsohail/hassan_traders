@@ -91,3 +91,19 @@ if company.purchase_orders.none?
 
   make.("Kohinoor Yarn Traders", 0, accountant, [ [ "Sewing Thread Cones", 500, 185 ] ])
 end
+
+[
+  [ "Rehman Cloth House", "Lahore", "Anarkali Bazar", 1_500_000, 30, 220_000 ],
+  [ "Bismillah Traders", "Karachi", "Jodia Bazar", 2_500_000, 45, 480_000 ],
+  [ "Ghani Fabrics", "Multan", "Hussain Agahi", 1_200_000, 30, 310_000 ],
+  [ "Al-Fatah Garments", "Rawalpindi", "Raja Bazar", 1_800_000, 30, 0 ],
+  [ "Chaudhry Textile Store", "Gujranwala", "GT Road", 1_000_000, 30, 150_000 ],
+  [ "Haq Bahu Collection", "Sargodha", "Kachehri Bazar", 300_000, 30, 340_000 ],
+  [ "Madni Dupatta House", "Faisalabad", "Kapra Market", 800_000, 15, 90_000 ],
+  [ "Khan Brothers", "Peshawar", "Qissa Khwani", 1_500_000, 45, 520_000 ],
+  [ "Zam Zam Bedsheets", "Hyderabad", "Resham Gali", 1_200_000, 30, 260_000 ]
+].each_with_index do |(name, city, area, credit_limit, terms_days, opening_balance), i|
+  company.customers.find_or_create_by!(name:) do |c|
+    c.assign_attributes(city:, area:, credit_limit:, terms_days:, opening_balance:, phone: format("0300-55501%02d", i + 1))
+  end
+end

@@ -27,6 +27,7 @@ class Company < ApplicationRecord
   has_many :suppliers, dependent: :restrict_with_exception
   has_many :purchase_orders, dependent: :restrict_with_exception
   has_many :supplier_payments, dependent: :restrict_with_exception
+  has_many :customers, dependent: :restrict_with_exception
   has_one_attached :logo
 
   normalizes :brand_color, with: ->(c) { c.strip.upcase }
