@@ -1,7 +1,7 @@
 class Invoice < ApplicationRecord
   class NotAllowed < StandardError; end
 
-  RECEIVED = "0".freeze
+  RECEIVED = "COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id = invoices.id AND p.reversed_at IS NULL), 0)".freeze
   STATUSES = %w[Unpaid Partial Overdue Paid Cancelled].freeze
 
   belongs_to :company
@@ -10,6 +10,7 @@ class Invoice < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :cancelled_by, class_name: "User", optional: true
   has_many :lines, -> { order(:id) }, class_name: "InvoiceLine", dependent: :destroy
+  has_many :payments, dependent: :restrict_with_exception
 
   validates :number, :date, :due_date, presence: true
 

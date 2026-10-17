@@ -18,6 +18,8 @@ Record every rupee a customer pays, by any method, against a bill or on account,
 | received_by | user | |
 | reversed_by, reversed_at, reverse_reason | | When a partner reverses it |
 
+**Built:** a payment is against a bill, the opening balance, or "on account". It can't exceed what is still due on that bill or opening balance; on account has no cap. Payments are append-only. A Postgres trigger allows only one change, the partner's reversal, which sets `reversed_at/by/reason`. Reversed payments stop counting towards bills and udhaar, and both lines show in the khata. Cheque clearing and auto-applying on-account money are not built.
+
 ## Rules
 
 - A payment against a bill cannot exceed that bill's balance. Any extra goes "On account" (ask the owner whether on-account money should auto-apply to the oldest bill).

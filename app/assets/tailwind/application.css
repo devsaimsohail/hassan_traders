@@ -93,6 +93,10 @@
     @apply border-b-0;
   }
 
+  .table td.text-right, .table th.text-right {
+    @apply whitespace-nowrap;
+  }
+
   .nav-link {
     @apply flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm text-[#344054] hover:bg-chip;
   }

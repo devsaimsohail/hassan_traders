@@ -1,0 +1,5 @@
+<% content_for :title, "Payments" %>
+<% content_for :subtitle, "Money received (wusooli) by cash, bank, cheque, JazzCash or Easypaisa" %>
+<% content_for :view_only, "1" unless policy(Payment).create? %>
+<%= render "lists/list", list: @list, row_path: ->(p) { payment_path(p) },
+      actions: (link_to(new_payment_path, class: "btn btn-sm") { icon(:plus, classes: "size-4") + " Receive payment" } if policy(Payment).create?) %>

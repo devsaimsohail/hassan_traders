@@ -11,7 +11,9 @@
       <%= pill("Over credit limit", "pill-bad") if c.over_limit == "Yes" %>
     </div>
     <div class="flex flex-wrap gap-1.5">
-      <% if policy(SalesOrder).create? %><%= link_to new_sales_order_path(customer_id: c.id), class: "btn btn-sm" do %><%= icon(:plus, classes: "size-4") %> New order<% end %><% end %>
+      <% if policy(:khata).show? %><%= link_to "Open khata", khata_path(customer_id: c.id), class: "btn btn-sm" %><% end %>
+      <% if policy(Payment).create? %><%= link_to new_payment_path(customer_id: c.id), class: "btn-ghost btn-sm" do %><%= icon(:plus, classes: "size-4") %> Receive payment<% end %><% end %>
+      <% if policy(SalesOrder).create? %><%= link_to new_sales_order_path(customer_id: c.id), class: "btn-ghost btn-sm" do %><%= icon(:plus, classes: "size-4") %> New order<% end %><% end %>
       <% if policy(c).update? %><%= link_to "Edit details", edit_customer_path(c), class: "btn-ghost btn-sm" %><% end %>
     </div>
   </div>
@@ -37,7 +39,6 @@
       </div>
     <% end %>
   </div>
-  <p class="hint">Payments and the khata for this customer appear here once those modules are built.</p>
 </section>
 
 <% if policy(Invoice).index? %>
@@ -57,6 +58,27 @@
       </table>
     <% else %>
       <p class="px-4 pb-4 text-muted">No unpaid bills.</p>
+    <% end %>
+  </section>
+<% end %>
+
+<% if policy(Payment).index? %>
+  <section class="card overflow-hidden" id="latest-payments">
+    <h2 class="px-4 pt-4 pb-2 text-[15px] font-semibold">Latest payments</h2>
+    <% if @payments.any? %>
+      <table class="table">
+        <thead><tr><th>Receipt #</th><th>Date</th><th>Method</th><th class="text-right">Amount</th><th></th></tr></thead>
+        <tbody>
+          <% @payments.each do |pay| %>
+            <tr class="cursor-pointer hover:bg-hover" data-controller="row-link" data-action="click->row-link#open" data-row-link-href-value="<%= payment_path(pay) %>">
+              <td class="whitespace-nowrap"><%= pay.number %></td><td class="whitespace-nowrap"><%= Fmt.date(pay.date) %></td><td><%= pay.method_label %></td>
+              <td class="text-right font-medium tabular-nums <%= "text-muted line-through" if pay.reversed? %>"><%= Fmt.rs(pay.amount) %></td><td><%= pill("Reversed", "pill-bad") if pay.reversed? %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="px-4 pb-4 text-muted">No payments yet.</p>
     <% end %>
   </section>
 <% end %>

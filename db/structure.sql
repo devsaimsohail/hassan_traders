@@ -35,6 +35,26 @@ END;
 $$;
 
 
+--
+-- Name: payments_only_reverse(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.payments_only_reverse() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    RAISE EXCEPTION 'payments can not be deleted';
+  END IF;
+  IF OLD.reversed_at IS NOT NULL OR
+     (to_jsonb(NEW) - 'reversed_at' - 'reversed_by_id' - 'reverse_reason') <> (to_jsonb(OLD) - 'reversed_at' - 'reversed_by_id' - 'reverse_reason') THEN
+    RAISE EXCEPTION 'payments can only be reversed, once';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -391,6 +411,51 @@ CREATE SEQUENCE public.items_id_seq
 --
 
 ALTER SEQUENCE public.items_id_seq OWNED BY public.items.id;
+
+
+--
+-- Name: payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.payments (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    customer_id bigint NOT NULL,
+    invoice_id bigint,
+    number character varying NOT NULL,
+    against character varying NOT NULL,
+    date date NOT NULL,
+    method character varying NOT NULL,
+    ref character varying,
+    amount integer NOT NULL,
+    received_by_id bigint NOT NULL,
+    reversed_at timestamp(6) without time zone,
+    reversed_by_id bigint,
+    reverse_reason character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT payments_against CHECK (((against)::text = ANY ((ARRAY['bill'::character varying, 'opening_balance'::character varying, 'on_account'::character varying])::text[]))),
+    CONSTRAINT payments_amount_positive CHECK ((amount > 0)),
+    CONSTRAINT payments_bill_has_invoice CHECK ((((against)::text = 'bill'::text) = (invoice_id IS NOT NULL)))
+);
+
+
+--
+-- Name: payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.payments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.payments_id_seq OWNED BY public.payments.id;
 
 
 --
@@ -869,6 +934,13 @@ ALTER TABLE ONLY public.items ALTER COLUMN id SET DEFAULT nextval('public.items_
 
 
 --
+-- Name: payments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments ALTER COLUMN id SET DEFAULT nextval('public.payments_id_seq'::regclass);
+
+
+--
 -- Name: purchase_order_lines id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1016,6 +1088,14 @@ ALTER TABLE ONLY public.invoices
 
 ALTER TABLE ONLY public.items
     ADD CONSTRAINT items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: payments payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT payments_pkey PRIMARY KEY (id);
 
 
 --
@@ -1272,6 +1352,62 @@ CREATE UNIQUE INDEX index_items_on_company_id_and_name ON public.items USING btr
 --
 
 CREATE INDEX index_items_on_default_supplier_id ON public.items USING btree (default_supplier_id);
+
+
+--
+-- Name: index_payments_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_payments_on_company_id ON public.payments USING btree (company_id);
+
+
+--
+-- Name: index_payments_on_company_id_and_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_payments_on_company_id_and_date ON public.payments USING btree (company_id, date);
+
+
+--
+-- Name: index_payments_on_company_id_and_number; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_payments_on_company_id_and_number ON public.payments USING btree (company_id, number);
+
+
+--
+-- Name: index_payments_on_customer_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_payments_on_customer_id ON public.payments USING btree (customer_id);
+
+
+--
+-- Name: index_payments_on_customer_id_and_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_payments_on_customer_id_and_date ON public.payments USING btree (customer_id, date);
+
+
+--
+-- Name: index_payments_on_invoice_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_payments_on_invoice_id ON public.payments USING btree (invoice_id);
+
+
+--
+-- Name: index_payments_on_received_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_payments_on_received_by_id ON public.payments USING btree (received_by_id);
+
+
+--
+-- Name: index_payments_on_reversed_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_payments_on_reversed_by_id ON public.payments USING btree (reversed_by_id);
 
 
 --
@@ -1576,6 +1712,13 @@ CREATE TRIGGER activity_logs_append_only BEFORE DELETE OR UPDATE ON public.activ
 
 
 --
+-- Name: payments payments_only_reverse; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER payments_only_reverse BEFORE DELETE OR UPDATE ON public.payments FOR EACH ROW EXECUTE FUNCTION public.payments_only_reverse();
+
+
+--
 -- Name: stock_moves stock_moves_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1611,6 +1754,14 @@ ALTER TABLE ONLY public.sales_order_lines
 
 ALTER TABLE ONLY public.invoices
     ADD CONSTRAINT fk_rails_0d349e632f FOREIGN KEY (customer_id) REFERENCES public.customers(id);
+
+
+--
+-- Name: payments fk_rails_0fc68a9316; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT fk_rails_0fc68a9316 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -1723,6 +1874,14 @@ ALTER TABLE ONLY public.stock_moves
 
 ALTER TABLE ONLY public.supplier_payments
     ADD CONSTRAINT fk_rails_53508e4704 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: payments fk_rails_62d18ea517; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT fk_rails_62d18ea517 FOREIGN KEY (invoice_id) REFERENCES public.invoices(id);
 
 
 --
@@ -1886,6 +2045,14 @@ ALTER TABLE ONLY public.purchase_orders
 
 
 --
+-- Name: payments fk_rails_e3a64e537e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT fk_rails_e3a64e537e FOREIGN KEY (customer_id) REFERENCES public.customers(id);
+
+
+--
 -- Name: sales_order_lines fk_rails_e3a8c2303b; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1894,11 +2061,27 @@ ALTER TABLE ONLY public.sales_order_lines
 
 
 --
+-- Name: payments fk_rails_ea39d76dbd; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT fk_rails_ea39d76dbd FOREIGN KEY (reversed_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: users_roles fk_rails_eb7b4658f8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users_roles
     ADD CONSTRAINT fk_rails_eb7b4658f8 FOREIGN KEY (role_id) REFERENCES public.roles(id);
+
+
+--
+-- Name: payments fk_rails_ebb532b805; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT fk_rails_ebb532b805 FOREIGN KEY (received_by_id) REFERENCES public.users(id);
 
 
 --
@@ -1932,6 +2115,7 @@ ALTER TABLE ONLY public.invoice_lines
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261018000013'),
 ('20261018000012'),
 ('20261018000011'),
 ('20261018000010'),

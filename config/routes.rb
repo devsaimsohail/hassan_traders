@@ -39,6 +39,10 @@ Rails.application.routes.draw do
       post :cancel
     end
   end
+  resources :payments, only: %i[ index show new create ] do
+    post :reverse, on: :member
+  end
+  resource :khata, only: :show, controller: "khata"
   resources :invoices, path: "bills", only: %i[ index show ] do
     member do
       post :extend_due

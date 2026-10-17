@@ -1,0 +1,50 @@
+<% content_for :title, "Receive payment" %>
+<% content_for :subtitle, "Wusooli. The amount goes into the customer's khata as jama, and both partners see it at once." %>
+<% customers = Current.company.customers.with_balances.order(:name) %>
+<% open_bills = Current.company.invoices.with_status.where(cancelled_at: nil).where("invoices.balance > 0").order(:due_date, :id) %>
+<% bill_counts = open_bills.unscope(:select, :order).group(:customer_id).count %>
+<% opening_left = customers.to_h { |c| [ c.id, c.opening_balance - c.payments.live.where(against: "opening_balance").sum(:amount) ] } %>
+<% choice = @payment.invoice ? "invoice:#{@payment.invoice_id}" : (@payment.against == "opening_balance" ? "opening_balance:#{@payment.customer_id}" : @payment.against) %>
+<div class="card max-w-2xl p-5">
+  <%= form_with model: @payment, url: payments_path, class: "grid gap-4 sm:grid-cols-2", data: { controller: "payment-form" } do |f| %>
+    <% if @payment.errors.any? %>
+      <p class="rounded-lg bg-bad-bg px-3.5 py-2.5 text-[13px] text-bad sm:col-span-2" role="alert"><%= @payment.errors.full_messages.to_sentence %></p>
+    <% end %>
+    <%= f.label :customer_id, class: "label sm:col-span-2" do %>
+      Customer
+      <%= f.select :customer_id, customers.map { |c| [ "#{c.name}#{" · #{c.city}" if c.city}", c.id, { data: { balance: Fmt.rs(c.balance), bills: bill_counts.fetch(c.id, 0) } } ] },
+            { include_blank: "Choose customer" }, required: true, class: "input", data: { payment_form_target: "customer", action: "change->payment-form#customerChanged" } %>
+      <span class="hint" data-payment-form-target="info"></span>
+    <% end %>
+    <%= f.label :against_choice, class: "label sm:col-span-2" do %>
+      Against
+      <%= select_tag "payment[against_choice]", safe_join([
+            *open_bills.map { |b| tag.option("#{b.number} · #{Fmt.date(b.date)} · baqaya #{Fmt.rs(b.balance)}#{" · overdue" if b.status == "Overdue"}",
+              value: "invoice:#{b.id}", selected: choice == "invoice:#{b.id}", data: { customer: b.customer_id, due: b.balance }) },
+            *customers.select { |c| opening_left[c.id].positive? }.map { |c| tag.option("Opening balance · #{Fmt.rs(opening_left[c.id])} left",
+              value: "opening_balance:#{c.id}", selected: choice == "opening_balance:#{c.id}", data: { customer: c.id, due: opening_left[c.id] }) },
+            tag.option("On account (no bill)", value: "on_account", selected: choice == "on_account") ]),
+            class: "input", data: { payment_form_target: "against", action: "change->payment-form#againstChanged" } %>
+    <% end %>
+    <%= f.label :amount, class: "label" do %>Amount (Rs)<%= f.number_field :amount, min: 1, step: 1, required: true, class: "input", data: { payment_form_target: "amount" } %><% end %>
+    <%= f.label :date, class: "label" do %>Date<%= f.date_field :date, required: true, class: "input" %><% end %>
+    <fieldset class="flex flex-col gap-1.5 sm:col-span-2">
+      <legend class="mb-1.5 text-[13px] font-medium text-[#344054]">Method</legend>
+      <div class="inline-flex flex-wrap gap-1 rounded-lg bg-chip p-1">
+        <% Payment::METHODS.each do |key, label| %>
+          <label class="cursor-pointer rounded-md px-3 py-1 text-[13px] text-[#475467] has-[:checked]:bg-white has-[:checked]:font-semibold has-[:checked]:text-ink has-[:checked]:shadow-sm">
+            <%= f.radio_button :method, key, class: "sr-only", data: { action: "change->payment-form#methodChanged" } %><%= label %>
+          </label>
+        <% end %>
+      </div>
+    </fieldset>
+    <%= f.label :ref, class: "label sm:col-span-2" do %>
+      Cheque no. / TID <span class="hint">Cheque number and bank, bank transfer ref, or JazzCash/Easypaisa TID. Not needed for cash.</span>
+      <%= f.text_field :ref, class: "input", data: { payment_form_target: "ref" } %>
+    <% end %>
+    <div class="flex gap-2 sm:col-span-2">
+      <%= f.submit "Save receipt", class: "btn" %>
+      <%= link_to "Cancel", payments_path, class: "btn-ghost" %>
+    </div>
+  <% end %>
+</div>

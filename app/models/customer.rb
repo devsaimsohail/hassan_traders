@@ -1,11 +1,12 @@
 class Customer < ApplicationRecord
-  RECEIVED = "0".freeze
-  LAST_PAYMENT = "NULL::date".freeze
+  RECEIVED = "COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.customer_id = customers.id AND p.reversed_at IS NULL), 0)".freeze
+  LAST_PAYMENT = "(SELECT MAX(p.date) FROM payments p WHERE p.customer_id = customers.id AND p.reversed_at IS NULL)".freeze
   EDITABLE = %w[name city area phone credit_limit terms_days note].freeze
 
   belongs_to :company
   has_many :sales_orders, dependent: :restrict_with_exception
   has_many :invoices, dependent: :restrict_with_exception
+  has_many :payments, dependent: :restrict_with_exception
 
   scope :with_balances, ->(on = Date.current) { from("#{balances_sql(on)} AS customers") }
 

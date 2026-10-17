@@ -141,3 +141,27 @@ if company.sales_orders.none?
     end
   end
 end
+
+if company.payments.none?
+  accountant = User.find_by!(mobile: "03001110003")
+  partner = User.find_by!(mobile: "03001110001")
+  customer = ->(name) { company.customers.find_by!(name:) }
+  pay = lambda do |name, days_ago, amount, method, ref = nil, invoice: nil, against: "bill"|
+    payment = Payment.receive!(company:, by: accountant, customer: customer.(name), invoice:, against: invoice ? "bill" : against,
+      amount:, method:, ref:, date: days_ago.days.ago.to_date)
+    raise payment.errors.full_messages.to_sentence unless payment.persisted?
+    payment
+  end
+  bill_of = ->(name) { company.invoices.where(customer: customer.(name)).order(:date).first }
+
+  pay.("Khan Brothers", 50, 200_000, "bank_transfer", "IBFT · Meezan · 77310012", against: "opening_balance")
+  pay.("Bismillah Traders", 45, 480_000, "cheque", "Chq #004512 · HBL", against: "opening_balance")
+  pay.("Ghani Fabrics", 20, 100_000, "cash", against: "opening_balance")
+  zam = bill_of.("Zam Zam Bedsheets")
+  pay.("Zam Zam Bedsheets", 10, [ zam.amount / 2, 1 ].max, "jazzcash", "TID 8812004411", invoice: zam) if zam
+  rehman = bill_of.("Rehman Cloth House")
+  pay.("Rehman Cloth House", 4, Invoice.with_status.find(rehman.id).balance, "easypaisa", "TID 5521876600", invoice: rehman) if rehman
+  bounced = pay.("Haq Bahu Collection", 15, 150_000, "cheque", "Chq #118822 · UBL", against: "opening_balance")
+  bounced.reverse!(by: partner, reason: "Cheque bounced")
+  pay.("Al-Fatah Garments", 2, 50_000, "cash", against: "on_account")
+end

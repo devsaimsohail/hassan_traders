@@ -35,3 +35,8 @@ en:
         sale_price: "Sale price"
         reorder_level: "Reorder level"
         opening_qty: "Opening stock"
+      payment:
+        ref: "Cheque no. / TID"
+        invoice: "Bill"
+      supplier_payment:
+        ref: "Cheque no. / TID"

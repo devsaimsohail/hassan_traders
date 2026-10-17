@@ -25,7 +25,9 @@ module ApplicationHelper
     [ "Sales and money", [
       { label: "Sales orders", icon: :sales, path: :sales_orders_path, permission: :sales, match: "/orders" },
       { label: "Bills", icon: :invoices, path: :invoices_path, permission: :invoices, match: "/bills" },
-      { label: "Customers", icon: :customers, path: :customers_path, permission: :khata, match: "/customers" }
+      { label: "Payments", icon: :payments, path: :payments_path, permission: :payments, match: "/payments" },
+      { label: "Customers", icon: :customers, path: :customers_path, permission: :khata, match: "/customers" },
+      { label: "Khata", icon: :khata, path: :khata_path, permission: :khata, match: "/khata" }
     ] ],
     [ "Admin", [
       { label: "Activity log", icon: :activity, path: :activity_logs_path, permission: :activity_log },
@@ -61,6 +63,9 @@ module ApplicationHelper
     elsif ref.match?(/\ASO-\d+\z/) && Current.access.sees?(:sales)
       @so_ids_by_number ||= Current.company.sales_orders.pluck(:number, :id).to_h
       sales_order_path(@so_ids_by_number[ref]) if @so_ids_by_number[ref]
+    elsif ref.match?(/\ARV-\d+\z/) && Current.access.sees?(:payments)
+      @payment_ids_by_number ||= Current.company.payments.pluck(:number, :id).to_h
+      payment_path(@payment_ids_by_number[ref]) if @payment_ids_by_number[ref]
     elsif ref.match?(/\AINV-\d+\z/) && Current.access.sees?(:invoices)
       @invoice_ids_by_number ||= Current.company.invoices.pluck(:number, :id).to_h
       invoice_path(@invoice_ids_by_number[ref]) if @invoice_ids_by_number[ref]

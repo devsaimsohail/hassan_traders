@@ -21,6 +21,8 @@ Read-only. Built from other tables, never typed in. Each entry:
 
 Cancelled bills and reversed payments either drop out or appear with their reversing line. Pick one approach and use it everywhere; showing both lines is recommended for transparency.
 
+**Built:** the khata is a plain Ruby model (`Khata`) built from the opening balance, bills, cancelled bills (a jama line on the cancel date), payments and reversals (a naam line on the reversal date). The opening balance is dated on the customer's first day or first entry, whichever is earlier. For "All dates" the closing balance equals the customer's udhaar.
+
 ## Screen: Khata page (Partner, Accountant: Yes; Sales Officer: View)
 
 One card, top to bottom:

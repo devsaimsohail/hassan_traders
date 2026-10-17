@@ -13,6 +13,9 @@
     <div class="flex items-center gap-2.5"><h2 class="text-lg font-semibold">Bill <%= inv.number %></h2><%= pill(inv.status, InvoiceList::STATUS_TONES[inv.status]) %></div>
     <div class="flex flex-wrap items-center gap-1.5">
       <%= link_to invoice_path(inv, format: :pdf), class: "btn btn-sm", data: { turbo: false } do %><%= icon(:pdf, classes: "size-4") %> Download PDF<% end %>
+      <% if !inv.cancelled? && inv.balance.positive? && policy(Payment).create? %>
+        <%= link_to new_payment_path(invoice_id: inv.id), class: "btn-ghost btn-sm" do %><%= icon(:plus, classes: "size-4") %> Receive payment<% end %>
+      <% end %>
       <% if inv.sales_order && policy(inv.sales_order).show? %><%= link_to "Open order", sales_order_path(inv.sales_order), class: "btn-ghost btn-sm" %><% end %>
       <% if policy(inv.customer).show? %><%= link_to "Customer", customer_path(inv.customer), class: "btn-ghost btn-sm" %><% end %>
     </div>
@@ -61,7 +64,24 @@
   </table>
 </section>
 
-<section class="card p-4" id="invoice-payments">
-  <h2 class="text-[15px] font-semibold">Payments against this bill</h2>
-  <p class="mt-1 text-[13px] text-muted">No payment received yet. Receiving payments comes with the next module.</p>
+<% payments = inv.payments.includes(:received_by).order(:date, :id) %>
+<section class="card overflow-hidden" id="invoice-payments">
+  <h2 class="px-4 pt-4 pb-2 text-[15px] font-semibold">Payments against this bill</h2>
+  <% if payments.any? %>
+    <table class="table">
+      <thead><tr><th>Receipt #</th><th>Date</th><th>Method</th><th class="hidden md:table-cell">Cheque / TID</th><th class="text-right">Amount</th><th></th></tr></thead>
+      <tbody>
+        <% payments.each do |pay| %>
+          <tr class="cursor-pointer hover:bg-hover" data-controller="row-link" data-action="click->row-link#open" data-row-link-href-value="<%= payment_path(pay) %>">
+            <td class="whitespace-nowrap"><%= pay.number %></td><td class="whitespace-nowrap"><%= Fmt.date(pay.date) %></td><td><%= pay.method_label %></td>
+            <td class="hidden whitespace-nowrap md:table-cell"><%= pay.ref %></td>
+            <td class="text-right font-medium tabular-nums <%= "text-muted line-through" if pay.reversed? %>"><%= Fmt.rs(pay.amount) %></td>
+            <td><%= pill("Reversed", "pill-bad") if pay.reversed? %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="px-4 pb-4 text-[13px] text-muted">No payment received yet.</p>
+  <% end %>
 </section>

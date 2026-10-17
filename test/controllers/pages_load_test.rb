@@ -9,7 +9,7 @@ class PagesLoadTest < ActionDispatch::IntegrationTest
       stock_moves_path, new_production_issue_path,
       purchase_orders_path, new_purchase_order_path, suppliers_path, new_supplier_path, edit_supplier_path(suppliers(:kohinoor)),
       customers_path, new_customer_path, customer_path(customers(:khan)), edit_customer_path(customers(:khan)),
-      sales_orders_path, new_sales_order_path, invoices_path
+      sales_orders_path, new_sales_order_path, invoices_path, payments_path, new_payment_path, khata_path
     ]
     po = companies(:hassan).purchase_orders.create!(supplier: suppliers(:kohinoor), date: Date.current, created_by: users(:partner),
       lines_attributes: [ { item_id: items(:yarn).id, qty: 1, rate: 1 } ])
@@ -17,7 +17,10 @@ class PagesLoadTest < ActionDispatch::IntegrationTest
     so = companies(:hassan).sales_orders.create!(customer: customers(:khan), date: Date.current, booked_by: users(:partner),
       lines_attributes: [ { item_id: items(:suit).id, qty: 1, rate: 3400 } ])
     paths << sales_order_path(so)
-    paths << invoice_path(so.dispatch!(by: users(:partner)))
+    bill = so.dispatch!(by: users(:partner))
+    paths << invoice_path(bill)
+    pay = Payment.receive!(company: companies(:hassan), by: users(:partner), customer: customers(:khan), invoice: bill, amount: 100, method: "cash", date: Date.current)
+    paths += [ payment_path(pay), new_payment_path(invoice_id: bill.id), customer_path(customers(:khan)) ]
 
     paths.each do |path|
       get path

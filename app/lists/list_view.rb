@@ -1,9 +1,6 @@
 class ListView
   PER_PAGE = 300
-  DATE_PRESETS = {
-    "all" => "All dates", "today" => "Today", "week" => "This week", "month" => "This month",
-    "last_month" => "Last month", "3m" => "Last 3 months", "custom" => "Pick dates…"
-  }.freeze
+  DATE_PRESETS = DatePreset::PRESETS
 
   Column = Struct.new(:key, :label, :sort, :format, :align, :optional, :pdf_width, :pdf_only, :nowrap, :tones, keyword_init: true) do
     def right? = align == :right
@@ -45,18 +42,7 @@ class ListView
   def preset = DATE_PRESETS.key?(params[:preset]) ? params[:preset] : default_preset
   def selected(select) = params[select.key.to_sym].presence
 
-  def date_range
-    today = Date.current
-    case preset
-    when "today" then [ today, today ]
-    when "week" then [ today.beginning_of_week, today ]
-    when "month" then [ today.beginning_of_month, today ]
-    when "last_month" then [ today.prev_month.beginning_of_month, today.prev_month.end_of_month ]
-    when "3m" then [ (today << 2).beginning_of_month, today ]
-    when "custom" then [ parse_date(params[:from]), parse_date(params[:to]) ]
-    else [ nil, nil ]
-    end
-  end
+  def date_range = DatePreset.range(preset, params[:from], params[:to])
 
   def filtered
     @filtered ||= begin
@@ -118,12 +104,7 @@ class ListView
     texts
   end
 
-  def date_text
-    from, to = date_range
-    return "All dates" unless from || to
-
-    "#{from ? Fmt.date(from) : "start"} to #{to ? Fmt.date(to) : "today"}"
-  end
+  def date_text = DatePreset.text(*date_range)
 
   def value(row, column) = row.public_send(column.key)
   def flagged?(_row) = false
@@ -156,11 +137,5 @@ class ListView
 
     def apply_tab(scope, tab)
       tab&.condition ? tab.condition.call(scope) : scope
-    end
-
-    def parse_date(value)
-      Date.iso8601(value.to_s)
-    rescue Date::Error
-      nil
     end
 end

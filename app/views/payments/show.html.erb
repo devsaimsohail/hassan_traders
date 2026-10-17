@@ -1,0 +1,33 @@
+<% pay = @payment %>
+<% content_for :title, "Receipt #{pay.number}" %>
+<% content_for :subtitle, "From #{pay.customer.name}" %>
+
+<div><%= link_to "← Back to payments", payments_path, class: "btn-link text-[13px]" %></div>
+
+<% if pay.reversed? %>
+  <p class="rounded-lg bg-bad-bg px-3.5 py-2.5 text-[13px] text-bad">Reversed by <%= pay.reversed_by.name %> on <%= Fmt.datetime(pay.reversed_at) %>: <%= pay.reverse_reason %>. The amount is back on the customer's udhaar.</p>
+<% end %>
+
+<section class="card flex flex-col gap-4 p-4" id="receipt">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="flex items-center gap-2.5"><h2 class="text-lg font-semibold">Receipt <%= pay.number %></h2><%= pill("Reversed", "pill-bad") if pay.reversed? %></div>
+    <div class="flex flex-wrap items-center gap-1.5">
+      <%= link_to payment_path(pay, format: :pdf), class: "btn btn-sm", data: { turbo: false } do %><%= icon(:pdf, classes: "size-4") %> Download receipt<% end %>
+      <% if pay.invoice && policy(pay.invoice).show? %><%= link_to "Open bill", invoice_path(pay.invoice), class: "btn-ghost btn-sm" %><% end %>
+      <% if policy(:khata).show? %><%= link_to "Customer khata", khata_path(customer_id: pay.customer_id), class: "btn-ghost btn-sm" %><% end %>
+    </div>
+  </div>
+  <%= render "shared/facts", facts: [ [ "Customer", pay.customer.name ], [ "Date", Fmt.date(pay.date) ], [ "Against", pay.against_label ],
+        [ "Method", pay.method_label ], [ "Cheque / TID", pay.ref.presence || "Cash" ], [ "Received by", pay.received_by.name ] ] %>
+  <%= render "shared/money_strip", figures: [ [ "Amount received", Fmt.rs(pay.amount), (pay.reversed? ? "text-muted line-through" : "text-ok") ],
+        [ "Customer still owes", Fmt.rs(@customer.balance), (@customer.balance.positive? ? "text-bad" : nil) ] ] %>
+  <% if policy(pay).reverse? %>
+    <details class="rounded-lg border border-line-soft px-3 py-2">
+      <summary class="cursor-pointer text-[13px] font-medium text-bad">Reverse this receipt</summary>
+      <%= form_with url: reverse_payment_path(pay), class: "mt-3 flex flex-wrap items-end gap-2" do |f| %>
+        <%= f.label :reason, class: "label min-w-64 flex-1" do %>Reason <span class="hint">The receipt stays in the record; the amount goes back on the udhaar.</span><%= f.text_field :reason, required: true, placeholder: "e.g. cheque bounced", class: "input" %><% end %>
+        <%= f.submit "Reverse receipt", class: "btn-ghost btn-sm text-bad" %>
+      <% end %>
+    </details>
+  <% end %>
+</section>

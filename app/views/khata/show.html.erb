@@ -1,0 +1,76 @@
+<% content_for :title, "Khata" %>
+<% content_for :subtitle, "Customer ledger: bills (naam), payments (jama) and the running balance (baqaya)" %>
+
+<% if @customer.nil? %>
+  <div class="card p-8 text-center text-muted">No customers yet. <%= link_to "Add a customer", new_customer_path, class: "btn-link" if policy(Customer).create? %></div>
+<% else %>
+  <% c = @balance %>
+  <% k = @khata %>
+  <div class="card overflow-hidden" id="khata">
+    <div class="flex flex-wrap justify-between gap-3 border-b border-line-soft px-4 py-3.5">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <h2 class="text-base font-semibold"><%= link_to c.name, customer_path(c), class: "hover:underline" %></h2>
+          <%= pill("Over credit limit", "pill-bad") if c.over_limit == "Yes" %>
+        </div>
+        <p class="mt-0.5 flex flex-wrap gap-x-4 text-[12.5px] text-muted">
+          <% if c.place.present? %><span><%= c.place %></span><% end %>
+          <% if c.phone.present? %><span>Mobile <b class="font-semibold text-ink"><%= c.phone %></b></span><% end %>
+          <span>Credit limit <b class="font-semibold text-ink"><%= Fmt.rs(c.credit_limit) %></b></span>
+          <span>Terms <b class="font-semibold text-ink"><%= c.terms_days %> days</b></span>
+        </p>
+      </div>
+      <div class="flex flex-col items-end gap-0.5 text-right text-[12.5px] text-muted">
+        <span>Owes today <b class="text-base font-semibold <%= c.balance.positive? ? "text-bad" : "text-ok" %>"><%= Fmt.rs(c.balance) %></b></span>
+        <span>Past due <b class="font-semibold <%= "text-bad" if c.overdue.positive? %>"><%= Fmt.rs(c.overdue) %></b> · Last payment <b class="font-semibold text-ink"><%= c.last_payment ? Fmt.date(c.last_payment) : "never" %></b></span>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line-soft px-4 py-2.5">
+      <%= form_with url: khata_path, method: :get, class: "flex flex-wrap items-center gap-1.5", data: { controller: "autosubmit", turbo_action: "replace" } do |f| %>
+        <%= f.select :customer_id, @customers.map { |x| [ "#{x.name}#{" · #{x.city}" if x.city}", x.id ] }, { selected: @customer.id }, class: "input min-h-8 w-auto py-1 text-[13px] shadow-none", aria: { label: "Customer" }, data: { action: "change->autosubmit#submit" } %>
+        <%= f.select :preset, DatePreset::PRESETS.invert, { selected: @preset }, class: "input min-h-8 w-auto py-1 text-[13px] shadow-none", aria: { label: "Period" }, data: { action: "change->autosubmit#submit" } %>
+        <% if @preset == "custom" %>
+          <%= f.date_field :from, value: k.from, class: "input min-h-8 w-auto py-1 text-[13px] shadow-none", aria: { label: "From date" }, data: { action: "change->autosubmit#submitIfValid" } %>
+          <span class="text-xs text-muted">to</span>
+          <%= f.date_field :to, value: k.to, class: "input min-h-8 w-auto py-1 text-[13px] shadow-none", aria: { label: "To date" }, data: { action: "change->autosubmit#submitIfValid" } %>
+        <% end %>
+      <% end %>
+      <div class="flex items-center gap-1.5">
+        <%= link_to khata_path(customer_id: @customer.id, preset: @preset, from: params[:from], to: params[:to], format: :pdf), class: "btn-ghost btn-sm", data: { turbo: false } do %><%= icon(:pdf, classes: "size-4") %> PDF<% end %>
+        <% if policy(Payment).create? %><%= link_to new_payment_path(customer_id: @customer.id), class: "btn btn-sm" do %><%= icon(:plus, classes: "size-4") %> Receive payment<% end %><% end %>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-x-5 gap-y-1 border-b border-line-soft bg-[#FAFBFC] px-4 py-2">
+      <% [ [ (k.from ? "Opening on #{Fmt.date(k.from)} (B/F)" : "Opening (B/F)"), Fmt.rs(k.opening), nil ], [ "Naam · bills", Fmt.rs(k.naam), nil ],
+           [ "Jama · received", Fmt.rs(k.jama), "text-ok" ], [ "Closing baqaya", Fmt.rs(k.closing), (k.closing.positive? ? "text-bad" : nil) ] ].each do |label, value, tone| %>
+        <span class="flex items-baseline gap-1.5"><span class="text-xs text-muted"><%= label %></span><b class="text-[13.5px] font-semibold tabular-nums <%= tone %>"><%= value %></b></span>
+      <% end %>
+    </div>
+
+    <% if k.entries.any? %>
+      <div class="max-h-[40rem] overflow-auto">
+        <table class="table">
+          <thead><tr><th>Date</th><th>Type</th><th>Ref</th><th class="hidden md:table-cell">Detail</th><th class="text-right">Naam (bill)</th><th class="text-right">Jama (received)</th><th class="text-right">Baqaya</th></tr></thead>
+          <tbody>
+            <% k.entries.each do |e| %>
+              <% path = case e.record when Invoice then (invoice_path(e.record) if policy(Invoice).index?) when Payment then (payment_path(e.record) if policy(Payment).index?) end %>
+              <tr class="<%= "cursor-pointer hover:bg-hover" if path %>" <%= tag.attributes(data: { controller: "row-link", action: "click->row-link#open", row_link_href_value: path }) if path %>>
+                <td class="whitespace-nowrap"><%= Fmt.date(e.date) %></td>
+                <td><%= pill(e.type, { "Naam" => "pill-info", "Jama" => "pill-ok", "B/F" => "pill-mute" }[e.type]) %></td>
+                <td class="whitespace-nowrap"><%= e.ref %></td>
+                <td class="hidden text-[#475467] md:table-cell"><%= e.detail %></td>
+                <td class="text-right tabular-nums"><%= Fmt.rs(e.naam) if e.naam.nonzero? %></td>
+                <td class="text-right tabular-nums text-ok"><%= Fmt.rs(e.jama) if e.jama.nonzero? %></td>
+                <td class="text-right font-medium tabular-nums"><%= Fmt.rs(e.balance) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="px-4 py-10 text-center text-muted">No entries in this period.</p>
+    <% end %>
+  </div>
+<% end %>
