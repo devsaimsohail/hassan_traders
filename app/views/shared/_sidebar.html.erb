@@ -12,7 +12,8 @@
       <div class="mx-2.5 mt-3.5 mb-1 hidden text-[11px] font-semibold uppercase tracking-wider text-faint first:mt-0 md:block"><%= group %></div>
       <% items.each do |item| %>
         <% path = send(item[:path]) %>
-        <%= link_to path, class: "nav-link shrink-0", aria: { current: (current_page?(path) ? "page" : nil) } do %>
+        <% active = request.path == path || (item[:match] && request.path.start_with?(item[:match])) %>
+        <%= link_to path, class: "nav-link shrink-0", aria: { current: (active ? "page" : nil) } do %>
           <%= icon(item[:icon]) %><span><%= item[:label] %></span>
         <% end %>
       <% end %>

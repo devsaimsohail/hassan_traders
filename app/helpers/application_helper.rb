@@ -11,12 +11,17 @@ module ApplicationHelper
     activity: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 7v5l3 2",
     settings: "M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4",
     plus: "M12 5v14M5 12h14",
-    logout: "M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"
+    logout: "M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11",
+    pdf: "M12 4v11M7 10l5 5 5-5M5 20h14",
+    info: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 11v5M12 8h.01"
   }.freeze
 
   NAV = [
     [ "Overview", [ { label: "Dashboard", icon: :dashboard, path: :root_path, permission: nil } ] ],
-    [ "Admin", [ { label: "Settings", icon: :settings, path: :settings_path, permission: :settings } ] ]
+    [ "Admin", [
+      { label: "Activity log", icon: :activity, path: :activity_logs_path, permission: :activity_log },
+      { label: "Settings", icon: :settings, path: :settings_path, permission: :settings }
+    ] ]
   ].freeze
 
   LEVEL_TONES = { "yes" => "pill-ok", "view" => "pill-info", "no" => "pill-mute" }.freeze
@@ -35,6 +40,10 @@ module ApplicationHelper
     end
   end
 
+  def record_path_for(_ref)
+    nil
+  end
+
   def person_policy(person)
     PersonPolicy.new(Current.access, person)
   end
@@ -47,13 +56,7 @@ module ApplicationHelper
     pill(level.to_s.capitalize, LEVEL_TONES[level.to_s])
   end
 
-  def rs(amount)
-    return "" if amount.nil?
-
-    digits = amount.to_i.abs.to_s
-    grouped = digits.length > 3 ? "#{digits[0...-3].reverse.scan(/\d{1,2}/).join(",").reverse},#{digits[-3..]}" : digits
-    "#{"-" if amount.to_i.negative?}Rs #{grouped}"
-  end
+  def rs(amount) = Fmt.rs(amount)
 
   def brand_style(company)
     color = company&.brand_color || "#0F766E"

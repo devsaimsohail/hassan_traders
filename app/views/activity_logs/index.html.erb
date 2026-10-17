@@ -1,0 +1,7 @@
+<% content_for :title, "Activity log" %>
+<% content_for :subtitle, "Who did what, and when" %>
+<p class="flex items-start gap-2 text-[13px] text-muted">
+  <%= icon(:info, classes: "mt-0.5 size-4 shrink-0 text-brand") %>
+  This log cannot be edited or deleted, not even by a partner, so both partners always see the same record.
+</p>
+<%= render "lists/list", list: @list, row_path: ->(log) { record_path_for(log.ref) } %>

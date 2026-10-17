@@ -14,6 +14,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :activity_logs, path: "activity", only: :index
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "home#show"

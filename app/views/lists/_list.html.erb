@@ -1,0 +1,98 @@
+<%# locals: (list:, row_path: nil, actions: nil) %>
+<div class="card overflow-hidden" id="list">
+  <% if list.tabs.any? %>
+    <nav class="flex gap-5 overflow-x-auto border-b border-line px-4" aria-label="<%= list.tab_group %>">
+      <% list.tabs.each do |tab| %>
+        <% on = tab == list.current_tab %>
+        <%= link_to url_for(list.url_params(tab: tab.key, page: nil)),
+              class: "inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 pt-3 pb-2.5 text-[13.5px] font-medium #{on ? "border-brand text-ink" : "border-transparent text-muted hover:text-ink"}",
+              aria: { current: (on ? "page" : nil) } do %>
+          <%= tab.label %>
+          <span class="rounded-full px-1.5 text-[11px] <%= on ? "bg-brand-soft text-brand" : "bg-chip text-muted" %>"><%= Fmt.lakh(list.tab_counts[tab.key]) %></span>
+        <% end %>
+      <% end %>
+    </nav>
+  <% end %>
+
+  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line-soft px-4 py-2.5">
+    <%= form_with url: url_for(only_path: true), method: :get, class: "flex min-w-0 flex-1 flex-wrap items-center gap-1.5", data: { controller: "autosubmit", turbo_action: "replace" } do |f| %>
+      <%= hidden_field_tag :tab, list.params[:tab] if list.params[:tab] %>
+      <%= hidden_field_tag :sort, list.params[:sort] if list.params[:sort] %>
+      <%= hidden_field_tag :dir, list.params[:dir] if list.params[:dir] %>
+      <%= f.search_field :q, value: list.query, placeholder: list.search_placeholder, class: "input min-h-8 max-w-64 flex-[1_1_12rem] py-1 text-[13px] shadow-none", aria: { label: "Search" } %>
+      <% if list.date_column %>
+        <%= f.select :preset, ListView::DATE_PRESETS.invert, { selected: list.preset }, class: "input min-h-8 w-auto py-1 text-[13px] shadow-none", aria: { label: "Date range" }, data: { action: "change->autosubmit#submit" } %>
+        <% if list.preset == "custom" %>
+          <% from, to = list.date_range %>
+          <%= f.date_field :from, value: from, class: "input min-h-8 w-auto py-1 text-[13px] shadow-none", aria: { label: "From date" }, data: { action: "change->autosubmit#submitIfValid" } %>
+          <span class="text-xs text-muted">to</span>
+          <%= f.date_field :to, value: to, class: "input min-h-8 w-auto py-1 text-[13px] shadow-none", aria: { label: "To date" }, data: { action: "change->autosubmit#submitIfValid" } %>
+        <% end %>
+      <% end %>
+      <% list.selects.each do |s| %>
+        <%= f.select s.key, list.options_for(s), { include_blank: s.all_label, selected: list.selected(s) }, class: "input min-h-8 w-auto max-w-48 py-1 text-[13px] shadow-none", aria: { label: s.label }, data: { action: "change->autosubmit#submit" } %>
+      <% end %>
+      <% if list.filtering? %>
+        <%= link_to "Clear filters", url_for(only_path: true), class: "btn-link px-1 text-[13px]" %>
+      <% end %>
+    <% end %>
+    <div class="flex items-center gap-1.5">
+      <%= link_to url_for(list.url_params(format: :pdf, page: nil)), class: "btn-ghost btn-sm", data: { turbo: false }, title: "Download what the table shows, with your filters" do %>
+        <%= icon(:pdf, classes: "size-4") %> PDF
+      <% end %>
+      <%= actions %>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-x-5 gap-y-1 border-b border-line-soft bg-[#FAFBFC] px-4 py-2">
+    <% list.totals.each do |label, value, tone| %>
+      <span class="flex items-baseline gap-1.5"><span class="text-xs text-muted"><%= label %></span><b class="text-[13.5px] font-semibold tabular-nums <%= total_tone(tone) %>"><%= value %></b></span>
+    <% end %>
+  </div>
+
+  <% if list.rows.any? %>
+    <div class="max-h-[40rem] overflow-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <% list.columns.each do |column| %>
+              <th class="<%= "text-right" if column.right? %> <%= "hidden md:table-cell" if column.optional %>" aria-sort="<%= aria_sort(list, column) %>">
+                <% if column.sort %>
+                  <%= link_to "#{column.label}#{sort_marker(list, column)}", url_for(list.sort_params_for(column)), class: "hover:text-ink", data: { turbo_action: "replace" } %>
+                <% else %>
+                  <%= column.label %>
+                <% end %>
+              </th>
+            <% end %>
+            <% if row_path %><th class="w-px"><span class="sr-only">Open</span></th><% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% list.rows.each do |row| %>
+            <% path = row_path&.call(row) %>
+            <tr class="<%= "cursor-pointer hover:bg-hover" if path %> <%= "[&>td:first-child]:shadow-[inset_3px_0_0_var(--color-bad)]" if list.flagged?(row) %>"
+                <%= tag.attributes(data: { controller: "row-link", action: "click->row-link#open", row_link_href_value: path }) if path %>>
+              <% list.columns.each do |column| %>
+                <td class="<%= "text-right font-medium whitespace-nowrap" if column.right? %> <%= "hidden md:table-cell" if column.optional %> <%= "whitespace-nowrap" if column.format.in?([ :date, :datetime ]) %>"><%= list_cell(list, row, column) %></td>
+              <% end %>
+              <% if row_path %>
+                <td class="w-px pl-0 text-right"><% if path %><%= link_to "›", path, class: "text-lg leading-none text-faint hover:text-brand", aria: { label: "Open" } %><% end %></td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% if list.page > 1 || list.more_pages? %>
+      <div class="flex items-center justify-between border-t border-line-soft px-4 py-2 text-xs text-muted">
+        <span>Showing <%= Fmt.lakh((list.page - 1) * ListView::PER_PAGE + 1) %>–<%= Fmt.lakh((list.page - 1) * ListView::PER_PAGE + list.rows.size) %> of <%= Fmt.lakh(list.total_count) %></span>
+        <span class="flex gap-3">
+          <%= link_to "‹ Newer", url_for(list.url_params(page: list.page - 1)), class: "btn-link text-xs" if list.page > 1 %>
+          <%= link_to "Older ›", url_for(list.url_params(page: list.page + 1)), class: "btn-link text-xs" if list.more_pages? %>
+        </span>
+      </div>
+    <% end %>
+  <% else %>
+    <p class="px-4 py-10 text-center text-muted">Nothing matches these filters.</p>
+  <% end %>
+</div>
