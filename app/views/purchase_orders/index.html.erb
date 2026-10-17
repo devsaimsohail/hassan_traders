@@ -1,0 +1,6 @@
+<% content_for :title, "Purchase orders" %>
+<% content_for :subtitle, "Buying from suppliers. Stock goes up only when the goods on a PO are received." %>
+<% content_for :view_only, "1" unless policy(PurchaseOrder).create? %>
+<%= render "purchase_orders/tabs" %>
+<%= render "lists/list", list: @list, row_path: ->(po) { purchase_order_path(po) },
+      actions: (link_to(new_purchase_order_path, class: "btn btn-sm") { icon(:plus, classes: "size-4") + " New PO" } if policy(PurchaseOrder).create?) %>

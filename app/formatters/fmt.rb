@@ -7,6 +7,14 @@ module Fmt
     "#{"-" if amount.to_d.negative?}Rs #{lakh(amount.to_d.abs.round)}"
   end
 
+  def rate(amount)
+    return "" if amount.nil?
+
+    value = amount.to_d.round(2)
+    paisa = value.frac.abs.zero? ? "" : format(".%02d", (value.frac.abs * 100).round)
+    "#{"-" if value.negative?}Rs #{lakh(value.abs.truncate)}#{paisa}"
+  end
+
   def qty(value)
     return "" if value.nil?
 

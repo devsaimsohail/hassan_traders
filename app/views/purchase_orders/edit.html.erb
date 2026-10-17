@@ -1,0 +1,3 @@
+<% content_for :title, "Edit draft #{@purchase_order.number}" %>
+<% content_for :subtitle, "Drafts can change until they are sent." %>
+<div class="card max-w-4xl p-5"><%= render "form", purchase_order: @purchase_order %></div>

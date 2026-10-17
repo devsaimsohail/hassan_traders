@@ -3,6 +3,7 @@ module ListsHelper
     value = list.value(row, column)
     case column.format
     when :rs then Fmt.rs(value)
+    when :rate then Fmt.rate(value)
     when :qty then Fmt.qty(value)
     when :date then Fmt.date(value)
     when :datetime then Fmt.datetime(value)

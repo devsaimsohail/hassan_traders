@@ -19,7 +19,7 @@ class StockList < ListView
   column :stock, "In stock", sort: "items.stock", format: :qty, align: :right, pdf_width: 10
   column :unit, "Unit", pdf_width: 6
   column :reorder_level, "Reorder at", sort: "items.reorder_level", format: :qty, align: :right, optional: true, pdf_width: 9
-  column :rate, "Avg rate", format: :rs, align: :right, pdf_only: true, pdf_width: 10
+  column :rate, "Avg cost", format: :rate, align: :right, pdf_only: true, pdf_width: 10
   column :value, "Value", sort: "items.value", format: :rs, align: :right, pdf_width: 13
   column :last_in, "Last received", sort: "items.last_in", format: :date, optional: true
   column :status, "Status", sort: "items.status", format: :pill, tones: STATUS_TONES, pdf_width: 9

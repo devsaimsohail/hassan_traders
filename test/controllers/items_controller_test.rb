@@ -72,8 +72,8 @@ class ItemsControllerTest < ActionDispatch::IntegrationTest
     patch item_path(items(:yarn)), params: { item: { rate: 735 } }
 
     log = ActivityLog.order(:id).last
-    assert_equal "Changed purchase rate for Cotton Yarn 20s", log.detail
-    assert_equal [ { "rate" => 720 }, { "rate" => 735 } ], [ log.old_value, log.new_value ]
+    assert_equal "Changed average cost for Cotton Yarn 20s", log.detail
+    assert_equal [ 720, 735 ], [ log.old_value["rate"].to_d, log.new_value["rate"].to_d ]
   end
 
   test "the item page shows stock and its movements" do

@@ -1,0 +1,14 @@
+<%= form_with model: supplier, class: "grid gap-4 sm:grid-cols-2" do |f| %>
+  <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to] %>
+  <% if supplier.errors.any? %>
+    <p class="rounded-lg bg-bad-bg px-3.5 py-2.5 text-[13px] text-bad sm:col-span-2" role="alert"><%= supplier.errors.full_messages.to_sentence %></p>
+  <% end %>
+  <%= f.label :name, class: "label sm:col-span-2" do %>Supplier name<%= f.text_field :name, required: true, autofocus: true, placeholder: "e.g. Kohinoor Yarn Traders", class: "input" %><% end %>
+  <%= f.label :city, class: "label" do %>City<%= f.text_field :city, class: "input" %><% end %>
+  <%= f.label :phone, class: "label" do %>Phone<%= f.telephone_field :phone, placeholder: "041-2634410", class: "input" %><% end %>
+  <%= f.label :supplies, class: "label sm:col-span-2" do %>What they supply <span class="hint">Optional, e.g. cotton yarn, cartons</span><%= f.text_field :supplies, class: "input" %><% end %>
+  <div class="flex gap-2 sm:col-span-2">
+    <%= f.submit supplier.persisted? ? "Save supplier" : "Add supplier", class: "btn" %>
+    <%= link_to "Cancel", suppliers_path, class: "btn-ghost" %>
+  </div>
+<% end %>

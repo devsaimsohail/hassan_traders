@@ -1,0 +1,21 @@
+<% changes = flash[:price_changes] %>
+<% if changes.present? %>
+  <section class="rounded-[10px] border border-[#FEDF89] bg-warn-bg p-4" role="status" id="price-changes">
+    <h2 class="font-semibold text-warn">Price went up</h2>
+    <ul class="mt-2 flex flex-col gap-2">
+      <% changes.each do |c| %>
+        <li class="flex flex-wrap items-center justify-between gap-2">
+          <span>
+            <b><%= c["name"] %></b>: <%= Fmt.rate(c["old"]) %> → <%= Fmt.rate(c["new"]) %>
+            <% if c["percent"].present? %><span class="text-warn">(+<%= c["percent"].to_d.to_s("F").delete_suffix(".0") %>%)</span><% end %>.
+            Average cost is now <%= Fmt.rate(c["avg"]) %>.
+            <% if c["product"] %>Your sale price is still <%= Fmt.rs(c["sale_price"]) %>.<% end %>
+          </span>
+          <% if c["product"] && policy(Item).update? %>
+            <%= link_to "Update sale price", edit_item_path(c["item_id"]), class: "btn-ghost btn-sm" %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

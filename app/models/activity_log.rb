@@ -1,7 +1,7 @@
 class ActivityLog < ApplicationRecord
   ACTIONS = [
     "Created", "Approved", "Received", "Dispatched", "Issued", "Payment received", "Edited", "Deleted",
-    "Cancelled", "Reversed", "Logged in", "Login failed", "Downloaded PDF"
+    "Cancelled", "Reversed", "Paid", "Logged in", "Login failed", "Downloaded PDF"
   ].freeze
   SECTIONS = %w[Purchase Stock Sales Invoices Payments Customers Users Settings Reports Login].freeze
   ATTENTION = [ "Deleted", "Login failed", "Edited", "Cancelled", "Reversed" ].freeze

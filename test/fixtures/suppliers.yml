@@ -1,0 +1,18 @@
+kohinoor:
+  company: hassan
+  code: S01
+  name: Kohinoor Yarn Traders
+  city: Faisalabad
+  supplies: Cotton yarn
+
+cmt:
+  company: hassan
+  code: S02
+  name: Usman Stitching Unit
+  city: Faisalabad
+  supplies: Finished goods
+
+other_supplier:
+  company: other
+  code: S01
+  name: Other Supplier

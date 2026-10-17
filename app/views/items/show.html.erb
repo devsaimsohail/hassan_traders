@@ -10,14 +10,20 @@
       <%= pill(@item.status, @item.status_tone) %>
     </div>
     <div class="flex flex-wrap gap-1.5">
-      <%= link_to item_path(@item, format: :pdf), class: "btn btn-sm", data: { turbo: false } do %><%= icon(:pdf, classes: "size-4") %> Stock card PDF<% end %>
+      <% if policy(PurchaseOrder).create? %>
+        <%= link_to new_purchase_order_path(item_id: @item.id), class: "btn btn-sm" do %><%= icon(:plus, classes: "size-4") %> New PO for this item<% end %>
+      <% end %>
+      <%= link_to item_path(@item, format: :pdf), class: "btn-ghost btn-sm", data: { turbo: false } do %><%= icon(:pdf, classes: "size-4") %> Stock card PDF<% end %>
       <% if policy(@item).update? %><%= link_to "Edit item", edit_item_path(@item), class: "btn-ghost btn-sm" %><% end %>
     </div>
   </div>
 
   <dl class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-x-5 gap-y-3">
-    <% [ [ "Unit", @item.unit ], [ "Reorder at", Fmt.qty(@item.reorder_level) ], [ "Purchase rate", Fmt.rs(@item.rate) ],
-         ([ "Sale price", Fmt.rs(@item.sale_price) ] if @item.product?), [ "Last received", @item.last_in ? Fmt.date(@item.last_in) : "Never" ] ].compact.each do |label, value| %>
+    <% change = @item.last_price_change %>
+    <% last_bought = @item.last_purchase_rate ? "#{Fmt.rate(@item.last_purchase_rate)} on #{Fmt.date(@item.last_purchase_on)}#{" (#{"+" if change.positive?}#{change.to_s("F").delete_suffix(".0")}%)" if change}" : "Not bought yet" %>
+    <% [ [ "Unit", @item.unit ], [ "Average cost", Fmt.rate(@item.rate) ], [ "Last bought", last_bought ],
+         ([ "Sale price", Fmt.rs(@item.sale_price) ] if @item.product?), [ "Reorder at", Fmt.qty(@item.reorder_level) ],
+         [ "Usual supplier", @item.default_supplier&.name || "Not set" ] ].compact.each do |label, value| %>
       <div><dt class="text-xs text-muted"><%= label %></dt><dd class="font-medium"><%= value %></dd></div>
     <% end %>
   </dl>

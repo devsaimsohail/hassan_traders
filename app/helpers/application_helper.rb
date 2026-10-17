@@ -18,7 +18,10 @@ module ApplicationHelper
 
   NAV = [
     [ "Overview", [ { label: "Dashboard", icon: :dashboard, path: :root_path, permission: nil } ] ],
-    [ "Inventory", [ { label: "Stock", icon: :stock, path: :items_path, permission: :stock, match: "/stock" } ] ],
+    [ "Inventory", [
+      { label: "Stock", icon: :stock, path: :items_path, permission: :stock, match: "/stock" },
+      { label: "Purchase orders", icon: :purchases, path: :purchase_orders_path, permission: :purchase_create, match: "/purchases" }
+    ] ],
     [ "Admin", [
       { label: "Activity log", icon: :activity, path: :activity_logs_path, permission: :activity_log },
       { label: "Settings", icon: :settings, path: :settings_path, permission: :settings }
@@ -47,6 +50,9 @@ module ApplicationHelper
     if ref.match?(/\A[RP]\d+\z/) && Current.access.sees?(:stock)
       @item_ids_by_code ||= Current.company.items.pluck(:code, :id).to_h
       item_path(@item_ids_by_code[ref]) if @item_ids_by_code[ref]
+    elsif ref.match?(/\APO-\d+\z/) && Current.access.sees?(:purchase_create)
+      @po_ids_by_number ||= Current.company.purchase_orders.pluck(:number, :id).to_h
+      purchase_order_path(@po_ids_by_number[ref]) if @po_ids_by_number[ref]
     end
   end
 

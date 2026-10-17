@@ -16,6 +16,21 @@ Rails.application.routes.draw do
 
   resources :activity_logs, path: "activity", only: :index
 
+  get "purchases", to: redirect("/purchases/orders")
+  scope "purchases" do
+    resources :purchase_orders, path: "orders" do
+      member do
+        post :submit
+        post :approve
+        post :receive
+        post :pay
+        post :cancel
+        get :copy
+      end
+    end
+    resources :suppliers, except: %i[ show destroy ]
+  end
+
   get "stock", to: redirect("/stock/items")
   scope "stock" do
     resources :items, except: :destroy

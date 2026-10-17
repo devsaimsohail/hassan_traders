@@ -50,3 +50,44 @@ if company.stock_moves.none?
     issue.save || raise(issue.errors.full_messages.to_sentence)
   end
 end
+
+[
+  [ "Kohinoor Yarn Traders", "Faisalabad", "041-2634410", "Cotton yarn" ],
+  [ "Sitara Weaving Mills", "Faisalabad", "041-8786521", "Grey cloth" ],
+  [ "Pak Dyes & Chemicals", "Lahore", "042-37225190", "Dyes" ],
+  [ "Usman Stitching Unit (CMT)", "Faisalabad", "0302-7741296", "Finished goods" ]
+].each do |name, city, phone, supplies|
+  company.suppliers.find_or_create_by!(name:) { |s| s.assign_attributes(city:, phone:, supplies:) }
+end
+
+if company.purchase_orders.none?
+  partner = User.find_by!(mobile: "03001110001")
+  accountant = User.find_by!(mobile: "03001110003")
+  store = User.find_by!(mobile: "03001110004")
+  item = ->(name) { company.items.find_by!(name:) }
+  supplier = ->(name) { company.suppliers.find_by!(name:) }
+  make = lambda do |name, days_ago, by, lines|
+    company.purchase_orders.create!(supplier: supplier.(name), date: days_ago.days.ago.to_date, created_by: by,
+      lines_attributes: lines.map { |n, qty, rate| { item_id: item.(n).id, qty:, rate: } })
+  end
+
+  old = make.("Kohinoor Yarn Traders", 30, accountant, [ [ "Cotton Yarn 20s", 1500, 720 ] ])
+  old.submit!(by: accountant)
+  old.approve!(by: partner)
+  old.receive!(by: store, on: 25.days.ago.to_date)
+  old.pay!(by: accountant, amount: old.total, method: "bank_transfer", ref: "IBFT · Meezan · 77310012", date: 20.days.ago.to_date)
+
+  dyes = make.("Pak Dyes & Chemicals", 8, partner, [ [ "Reactive Dye", 120, 2850 ] ])
+  dyes.submit!(by: partner)
+  dyes.receive!(by: store, on: 5.days.ago.to_date)
+  dyes.pay!(by: accountant, amount: 150_000, method: "cheque", ref: "Chq #004512 · HBL", date: 3.days.ago.to_date)
+
+  cmt = make.("Usman Stitching Unit (CMT)", 3, accountant, [ [ "Towel Set (3 pcs)", 600, 920 ], [ "Lawn Suit 3-Piece", 300, 2350 ] ])
+  cmt.submit!(by: accountant)
+  cmt.approve!(by: partner)
+
+  cloth = make.("Sitara Weaving Mills", 1, accountant, [ [ "Grey Cloth (Lawn)", 6000, 215 ] ])
+  cloth.submit!(by: accountant)
+
+  make.("Kohinoor Yarn Traders", 0, accountant, [ [ "Sewing Thread Cones", 500, 185 ] ])
+end

@@ -31,7 +31,7 @@ en:
   activerecord:
     attributes:
       item:
-        rate: "Purchase rate"
+        rate: "Average cost"
         sale_price: "Sale price"
         reorder_level: "Reorder level"
         opening_qty: "Opening stock"

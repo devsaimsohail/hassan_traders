@@ -25,7 +25,9 @@ class Item < ApplicationRecord
   SQL
 
   belongs_to :company
+  belongs_to :default_supplier, class_name: "Supplier", optional: true
   has_many :stock_moves, dependent: :restrict_with_exception
+  has_many :purchase_order_lines, dependent: :restrict_with_exception
 
   scope :with_stock, -> { from(WITH_STOCK) }
 
@@ -35,7 +37,7 @@ class Item < ApplicationRecord
   validates :code, presence: true, uniqueness: { scope: :company_id }
   validates :category, inclusion: { in: CATEGORIES.keys, message: "must be chosen" }
   validates :unit, presence: true
-  validates :rate, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :rate, numericality: { greater_than_or_equal_to: 0 }
   validates :sale_price, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :reorder_level, :opening_qty, numericality: { greater_than_or_equal_to: 0 }
   validate :opening_qty_fixed_after_moves, on: :update
@@ -53,6 +55,14 @@ class Item < ApplicationRecord
   def current_stock
     moves = stock_moves.group(:direction).sum(:qty)
     opening_qty + moves.fetch("in", 0) - moves.fetch("out", 0)
+  end
+
+  def last_price_change
+    rates = purchase_order_lines.joins(:purchase_order).merge(PurchaseOrder.where(status: "received"))
+      .order("purchase_orders.received_on DESC, purchase_order_lines.id DESC").limit(2).pluck(:rate)
+    return if rates.size < 2 || rates.last.zero? || rates.first == rates.last
+
+    ((rates.first - rates.last) / rates.last * 100).round(1)
   end
 
   def status_tone

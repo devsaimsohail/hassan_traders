@@ -1,0 +1,5 @@
+<% content_for :title, "Suppliers" %>
+<% content_for :subtitle, "Who you buy from and how much you still owe them" %>
+<%= render "purchase_orders/tabs" %>
+<%= render "lists/list", list: @list, row_path: ->(s) { purchase_orders_path(supplier: s.name) },
+      actions: (link_to(new_supplier_path, class: "btn btn-sm") { icon(:plus, classes: "size-4") + " Add supplier" } if policy(Supplier).create?) %>

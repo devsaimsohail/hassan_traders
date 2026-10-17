@@ -50,7 +50,7 @@ The clickable prototype these specs come from: https://claude.ai/artifact/Wv39ET
 ## Decisions still open
 
 These are not settled. Ask the owner before building the parts they touch.
-- **Stock costing.** Weighted average cost on each receipt (recommended) or fixed rate per item. See 05.
+- **Stock costing (decided).** Weighted average cost, updated on every PO receipt. The last purchase rate is kept beside it and fills in the next PO, and a price rise shows an alert with a link to update the sale price. See 05 and 06.
 - **Partial receiving of a PO** and **partial dispatch of an order.** Not in v1 unless asked.
 - **Sales tax (GST) on bills.** Not in v1. Company NTN and STRN are stored and printed already.
 - **Partner approval and partnership shares.** Removed from module 03 for now; roles come from rolify only.

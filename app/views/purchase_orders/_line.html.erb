@@ -1,0 +1,14 @@
+<%# locals: (f:, items:) %>
+<div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto]" data-line>
+  <%= f.hidden_field :id if f.object.persisted? %>
+  <%= f.hidden_field :_destroy, value: "0" if f.object.persisted? %>
+  <%= f.select :item_id, items.map { |i| [ "#{i.name} (#{i.unit})", i.id, { data: { rate: (i.last_purchase_rate || i.rate).to_d.to_s("F").delete_suffix(".0"), unit: i.unit } } ] },
+        { include_blank: "Choose item" }, class: "input col-span-3 sm:col-span-1", aria: { label: "Item" }, data: { action: "change->po-lines#pickItem" } %>
+  <span class="relative">
+    <%= f.number_field :qty, min: 0, step: "any", placeholder: "Qty", value: f.object.qty&.to_d&.to_s("F")&.delete_suffix(".0"), class: "input pr-12", aria: { label: "Quantity" }, data: { field: "qty", action: "input->po-lines#recalc" } %>
+    <span class="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-xs text-muted" data-field="unit"><%= f.object.item&.unit %></span>
+  </span>
+  <%= f.number_field :rate, min: 0, step: "0.01", placeholder: "Rate", value: f.object.rate&.to_d&.to_s("F")&.delete_suffix(".0"), class: "input", aria: { label: "Rate in rupees" }, data: { field: "rate", action: "input->po-lines#recalc" } %>
+  <span class="hidden text-right font-medium tabular-nums sm:block" data-field="amount"></span>
+  <button type="button" class="grid size-8 cursor-pointer place-items-center rounded-lg text-lg text-faint hover:bg-chip hover:text-ink" aria-label="Remove line" data-action="po-lines#remove">×</button>
+</div>

@@ -1,0 +1,52 @@
+<% items = Current.company.items.order(:category, :name) %>
+<%= form_with model: purchase_order, class: "flex flex-col gap-4", data: { controller: "po-lines" } do |f| %>
+  <% if purchase_order.errors.any? %>
+    <p class="rounded-lg bg-bad-bg px-3.5 py-2.5 text-[13px] text-bad" role="alert"><%= purchase_order.errors.full_messages.to_sentence %></p>
+  <% end %>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <%= f.label :supplier_id, class: "label" do %>
+      <span class="flex items-baseline justify-between">Supplier <%= link_to "+ New supplier", new_supplier_path(return_to: new_purchase_order_path), class: "btn-link text-xs" %></span>
+      <%= f.collection_select :supplier_id, Current.company.suppliers.order(:name), :id, :name, { include_blank: "Choose supplier" }, class: "input", required: true %>
+    <% end %>
+    <%= f.label :date, class: "label" do %>
+      PO date
+      <%= f.date_field :date, required: true, class: "input" %>
+    <% end %>
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <div class="hidden grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-2 text-xs text-muted sm:grid">
+      <span>Item</span><span>Qty</span><span>Rate (Rs)</span><span class="text-right">Amount</span><span class="w-8"></span>
+    </div>
+    <div class="flex flex-col gap-2" data-po-lines-target="lines">
+      <% purchase_order.lines.build if purchase_order.lines.empty? %>
+      <%= f.fields_for :lines do |lf| %>
+        <%= render "purchase_orders/line", f: lf, items: %>
+      <% end %>
+    </div>
+    <template data-po-lines-target="template">
+      <%= f.fields_for :lines, PurchaseOrderLine.new, child_index: "NEW_LINE" do |lf| %>
+        <%= render "purchase_orders/line", f: lf, items: %>
+      <% end %>
+    </template>
+    <div><button type="button" class="btn-link text-[13px]" data-action="po-lines#add">+ Add another item</button></div>
+    <p class="hint">The rate fills in from the last price you paid. Change it if the supplier's rate is different.</p>
+  </div>
+
+  <div class="flex items-baseline justify-end gap-3 border-t border-line-soft pt-3">
+    <span class="text-xs text-muted">PO total</span>
+    <b class="text-xl tabular-nums" data-po-lines-target="total">Rs 0</b>
+  </div>
+
+  <%= f.label :note, class: "label" do %>
+    Note for supplier <span class="hint">Optional, e.g. deliver to godown 2</span>
+    <%= f.text_field :note, class: "input" %>
+  <% end %>
+
+  <div class="flex flex-wrap gap-2">
+    <% approver = Current.access.can?(:purchase_approve) %>
+    <%= f.submit approver ? "Save and approve" : "Send for approval", name: "send", class: "btn" %>
+    <%= f.submit "Save as draft", class: "btn-ghost" %>
+    <%= link_to "Cancel", purchase_order.persisted? ? purchase_order_path(purchase_order) : purchase_orders_path, class: "btn-ghost" %>
+  </div>
+<% end %>

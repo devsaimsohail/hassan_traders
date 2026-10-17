@@ -47,7 +47,7 @@ Know what is in the godown and what it is worth, with every change traceable. **
 1. An `In` move can only be created by receiving a purchase order (06). The API rejects any other source.
 2. An `Out` move is created by dispatching a sales order (08) or by a production issue slip (raw material only, Store Incharge or Partner).
 3. Stock cannot go below zero. Dispatch and issue are refused with "Only 40 set in stock".
-4. **Costing (open decision):** recommend weighted average cost. On each receipt, new rate = (old stock × old rate + received qty × PO rate) ÷ new stock. The prototype used a fixed rate per item.
+4. **Costing (decided): weighted average cost.** On each PO receipt, new rate = (stock before × old rate + received qty × PO rate) ÷ (stock before + received qty). If there was no stock, the PO rate becomes the rate. The rate is stored with paisa (2 decimals). The item also keeps `last_purchase_rate`, `last_purchase_on` and its usual supplier, all set on receipt. The item page shows "Average cost" and "Last bought Rs 12 on 18 Oct (+20%)".
 5. Changing an item's rate or reorder level is an edit with old and new values in the log.
 
 ## Screens

@@ -14,7 +14,7 @@ export default class extends Controller {
       el.querySelectorAll("input").forEach((input) => { input.disabled = !product })
     })
     if (this.hasRateHintTarget) {
-      this.rateHintTarget.textContent = product ? "What one unit costs you to buy or make" : "What you pay the supplier per unit"
+      this.rateHintTarget.textContent = (product ? "What one unit costs you to buy or make" : "What you pay the supplier per unit") + ". It becomes the average cost as goods are received."
     }
   }
 }

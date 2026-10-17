@@ -244,12 +244,15 @@ CREATE TABLE public.items (
     name character varying NOT NULL,
     category character varying NOT NULL,
     unit character varying NOT NULL,
-    rate integer DEFAULT 0 NOT NULL,
+    rate numeric(12,2) DEFAULT 0.0 NOT NULL,
     sale_price integer,
     reorder_level numeric(12,3) DEFAULT 0.0 NOT NULL,
     opening_qty numeric(12,3) DEFAULT 0.0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
+    last_purchase_rate numeric(12,2),
+    last_purchase_on date,
+    default_supplier_id bigint,
     CONSTRAINT items_category CHECK (((category)::text = ANY ((ARRAY['raw_material'::character varying, 'product'::character varying])::text[])))
 );
 
@@ -271,6 +274,89 @@ CREATE SEQUENCE public.items_id_seq
 --
 
 ALTER SEQUENCE public.items_id_seq OWNED BY public.items.id;
+
+
+--
+-- Name: purchase_order_lines; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.purchase_order_lines (
+    id bigint NOT NULL,
+    purchase_order_id bigint NOT NULL,
+    item_id bigint NOT NULL,
+    qty numeric(12,3) NOT NULL,
+    rate numeric(12,2) NOT NULL,
+    amount integer NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT purchase_order_lines_qty_positive CHECK ((qty > (0)::numeric)),
+    CONSTRAINT purchase_order_lines_rate CHECK ((rate >= (0)::numeric))
+);
+
+
+--
+-- Name: purchase_order_lines_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.purchase_order_lines_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: purchase_order_lines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.purchase_order_lines_id_seq OWNED BY public.purchase_order_lines.id;
+
+
+--
+-- Name: purchase_orders; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.purchase_orders (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    supplier_id bigint NOT NULL,
+    number character varying NOT NULL,
+    date date NOT NULL,
+    status character varying DEFAULT 'draft'::character varying NOT NULL,
+    total integer DEFAULT 0 NOT NULL,
+    note character varying,
+    created_by_id bigint NOT NULL,
+    approved_by_id bigint,
+    approved_at timestamp(6) without time zone,
+    received_by_id bigint,
+    received_on date,
+    cancelled_by_id bigint,
+    cancelled_at timestamp(6) without time zone,
+    cancel_reason character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT purchase_orders_status CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'pending_approval'::character varying, 'approved'::character varying, 'received'::character varying, 'cancelled'::character varying])::text[])))
+);
+
+
+--
+-- Name: purchase_orders_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.purchase_orders_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: purchase_orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.purchase_orders_id_seq OWNED BY public.purchase_orders.id;
 
 
 --
@@ -390,6 +476,80 @@ ALTER SEQUENCE public.stock_moves_id_seq OWNED BY public.stock_moves.id;
 
 
 --
+-- Name: supplier_payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.supplier_payments (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    supplier_id bigint NOT NULL,
+    purchase_order_id bigint,
+    date date NOT NULL,
+    amount integer NOT NULL,
+    method character varying NOT NULL,
+    ref character varying,
+    user_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT supplier_payments_amount_positive CHECK ((amount > 0))
+);
+
+
+--
+-- Name: supplier_payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.supplier_payments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: supplier_payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.supplier_payments_id_seq OWNED BY public.supplier_payments.id;
+
+
+--
+-- Name: suppliers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.suppliers (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    code character varying NOT NULL,
+    name character varying NOT NULL,
+    city character varying,
+    phone character varying,
+    supplies character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: suppliers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.suppliers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: suppliers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.suppliers_id_seq OWNED BY public.suppliers.id;
+
+
+--
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -489,6 +649,20 @@ ALTER TABLE ONLY public.items ALTER COLUMN id SET DEFAULT nextval('public.items_
 
 
 --
+-- Name: purchase_order_lines id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_order_lines ALTER COLUMN id SET DEFAULT nextval('public.purchase_order_lines_id_seq'::regclass);
+
+
+--
+-- Name: purchase_orders id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_orders ALTER COLUMN id SET DEFAULT nextval('public.purchase_orders_id_seq'::regclass);
+
+
+--
 -- Name: role_permissions id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -507,6 +681,20 @@ ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_
 --
 
 ALTER TABLE ONLY public.stock_moves ALTER COLUMN id SET DEFAULT nextval('public.stock_moves_id_seq'::regclass);
+
+
+--
+-- Name: supplier_payments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_payments ALTER COLUMN id SET DEFAULT nextval('public.supplier_payments_id_seq'::regclass);
+
+
+--
+-- Name: suppliers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.suppliers ALTER COLUMN id SET DEFAULT nextval('public.suppliers_id_seq'::regclass);
 
 
 --
@@ -573,6 +761,22 @@ ALTER TABLE ONLY public.items
 
 
 --
+-- Name: purchase_order_lines purchase_order_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_order_lines
+    ADD CONSTRAINT purchase_order_lines_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: purchase_orders purchase_orders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_orders
+    ADD CONSTRAINT purchase_orders_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: role_permissions role_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -602,6 +806,22 @@ ALTER TABLE ONLY public.schema_migrations
 
 ALTER TABLE ONLY public.stock_moves
     ADD CONSTRAINT stock_moves_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: supplier_payments supplier_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_payments
+    ADD CONSTRAINT supplier_payments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: suppliers suppliers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.suppliers
+    ADD CONSTRAINT suppliers_pkey PRIMARY KEY (id);
 
 
 --
@@ -683,6 +903,83 @@ CREATE UNIQUE INDEX index_items_on_company_id_and_name ON public.items USING btr
 
 
 --
+-- Name: index_items_on_default_supplier_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_items_on_default_supplier_id ON public.items USING btree (default_supplier_id);
+
+
+--
+-- Name: index_purchase_order_lines_on_item_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_purchase_order_lines_on_item_id ON public.purchase_order_lines USING btree (item_id);
+
+
+--
+-- Name: index_purchase_order_lines_on_purchase_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_purchase_order_lines_on_purchase_order_id ON public.purchase_order_lines USING btree (purchase_order_id);
+
+
+--
+-- Name: index_purchase_orders_on_approved_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_purchase_orders_on_approved_by_id ON public.purchase_orders USING btree (approved_by_id);
+
+
+--
+-- Name: index_purchase_orders_on_cancelled_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_purchase_orders_on_cancelled_by_id ON public.purchase_orders USING btree (cancelled_by_id);
+
+
+--
+-- Name: index_purchase_orders_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_purchase_orders_on_company_id ON public.purchase_orders USING btree (company_id);
+
+
+--
+-- Name: index_purchase_orders_on_company_id_and_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_purchase_orders_on_company_id_and_date ON public.purchase_orders USING btree (company_id, date);
+
+
+--
+-- Name: index_purchase_orders_on_company_id_and_number; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_purchase_orders_on_company_id_and_number ON public.purchase_orders USING btree (company_id, number);
+
+
+--
+-- Name: index_purchase_orders_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_purchase_orders_on_created_by_id ON public.purchase_orders USING btree (created_by_id);
+
+
+--
+-- Name: index_purchase_orders_on_received_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_purchase_orders_on_received_by_id ON public.purchase_orders USING btree (received_by_id);
+
+
+--
+-- Name: index_purchase_orders_on_supplier_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_purchase_orders_on_supplier_id ON public.purchase_orders USING btree (supplier_id);
+
+
+--
 -- Name: index_role_permissions_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -753,6 +1050,55 @@ CREATE INDEX index_stock_moves_on_user_id ON public.stock_moves USING btree (use
 
 
 --
+-- Name: index_supplier_payments_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_supplier_payments_on_company_id ON public.supplier_payments USING btree (company_id);
+
+
+--
+-- Name: index_supplier_payments_on_purchase_order_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_supplier_payments_on_purchase_order_id ON public.supplier_payments USING btree (purchase_order_id);
+
+
+--
+-- Name: index_supplier_payments_on_supplier_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_supplier_payments_on_supplier_id ON public.supplier_payments USING btree (supplier_id);
+
+
+--
+-- Name: index_supplier_payments_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_supplier_payments_on_user_id ON public.supplier_payments USING btree (user_id);
+
+
+--
+-- Name: index_suppliers_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_suppliers_on_company_id ON public.suppliers USING btree (company_id);
+
+
+--
+-- Name: index_suppliers_on_company_id_and_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_suppliers_on_company_id_and_code ON public.suppliers USING btree (company_id, code);
+
+
+--
+-- Name: index_suppliers_on_company_id_and_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_suppliers_on_company_id_and_name ON public.suppliers USING btree (company_id, name);
+
+
+--
 -- Name: index_users_on_disabled_by_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -802,6 +1148,53 @@ CREATE TRIGGER stock_moves_append_only BEFORE DELETE OR UPDATE ON public.stock_m
 
 
 --
+-- Name: supplier_payments supplier_payments_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER supplier_payments_append_only BEFORE DELETE OR UPDATE ON public.supplier_payments FOR EACH ROW EXECUTE FUNCTION public.append_only_row();
+
+
+--
+-- Name: supplier_payments fk_rails_1846f352d5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_payments
+    ADD CONSTRAINT fk_rails_1846f352d5 FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id);
+
+
+--
+-- Name: purchase_orders fk_rails_1d67bb2d7b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_orders
+    ADD CONSTRAINT fk_rails_1d67bb2d7b FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id);
+
+
+--
+-- Name: supplier_payments fk_rails_2c224002a2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_payments
+    ADD CONSTRAINT fk_rails_2c224002a2 FOREIGN KEY (purchase_order_id) REFERENCES public.purchase_orders(id);
+
+
+--
+-- Name: purchase_orders fk_rails_3079d73660; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_orders
+    ADD CONSTRAINT fk_rails_3079d73660 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: purchase_orders fk_rails_3c1ce09582; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_orders
+    ADD CONSTRAINT fk_rails_3c1ce09582 FOREIGN KEY (approved_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: stock_moves fk_rails_453272e40c; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -818,11 +1211,43 @@ ALTER TABLE ONLY public.users_roles
 
 
 --
+-- Name: items fk_rails_4bcb302629; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.items
+    ADD CONSTRAINT fk_rails_4bcb302629 FOREIGN KEY (default_supplier_id) REFERENCES public.suppliers(id);
+
+
+--
 -- Name: stock_moves fk_rails_525bab533d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.stock_moves
     ADD CONSTRAINT fk_rails_525bab533d FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: supplier_payments fk_rails_53508e4704; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_payments
+    ADD CONSTRAINT fk_rails_53508e4704 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: purchase_orders fk_rails_7139e543c2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_orders
+    ADD CONSTRAINT fk_rails_7139e543c2 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: purchase_order_lines fk_rails_7b2f871d0c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_order_lines
+    ADD CONSTRAINT fk_rails_7b2f871d0c FOREIGN KEY (item_id) REFERENCES public.items(id);
 
 
 --
@@ -842,11 +1267,35 @@ ALTER TABLE ONLY public.active_storage_variant_records
 
 
 --
+-- Name: supplier_payments fk_rails_9ab47cc64a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_payments
+    ADD CONSTRAINT fk_rails_9ab47cc64a FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: purchase_order_lines fk_rails_a4215877c0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_order_lines
+    ADD CONSTRAINT fk_rails_a4215877c0 FOREIGN KEY (purchase_order_id) REFERENCES public.purchase_orders(id);
+
+
+--
 -- Name: items fk_rails_ad750f090b; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.items
     ADD CONSTRAINT fk_rails_ad750f090b FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: purchase_orders fk_rails_ae534c0277; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_orders
+    ADD CONSTRAINT fk_rails_ae534c0277 FOREIGN KEY (cancelled_by_id) REFERENCES public.users(id);
 
 
 --
@@ -882,11 +1331,27 @@ ALTER TABLE ONLY public.activity_logs
 
 
 --
+-- Name: suppliers fk_rails_cfcc7596f6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.suppliers
+    ADD CONSTRAINT fk_rails_cfcc7596f6 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: activity_logs fk_rails_d714aa4e44; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.activity_logs
     ADD CONSTRAINT fk_rails_d714aa4e44 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: purchase_orders fk_rails_d79cad4235; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.purchase_orders
+    ADD CONSTRAINT fk_rails_d79cad4235 FOREIGN KEY (received_by_id) REFERENCES public.users(id);
 
 
 --
@@ -904,6 +1369,7 @@ ALTER TABLE ONLY public.users_roles
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261018000010'),
 ('20261018000009'),
 ('20261018000008'),
 ('20261018000007'),

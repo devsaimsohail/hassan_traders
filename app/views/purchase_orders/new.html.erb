@@ -1,0 +1,3 @@
+<% content_for :title, "New purchase order" %>
+<% content_for :subtitle, Current.access.can?(:purchase_approve) ? "As a partner, saving also approves it." : "A partner approves it, then the godown receives the goods." %>
+<div class="card max-w-4xl p-5"><%= render "form", purchase_order: @purchase_order %></div>
