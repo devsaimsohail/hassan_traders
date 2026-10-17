@@ -17,7 +17,7 @@ module ApplicationHelper
   }.freeze
 
   NAV = [
-    [ "Overview", [ { label: "Dashboard", icon: :dashboard, path: :root_path, permission: nil } ] ],
+    [ "Overview", [ { label: "Dashboard", icon: :dashboard, path: :root_path, permission: :dashboard } ] ],
     [ "Inventory", [
       { label: "Stock", icon: :stock, path: :items_path, permission: :stock, match: "/stock" },
       { label: "Purchase orders", icon: :purchases, path: :purchase_orders_path, permission: :purchase_create, match: "/purchases" }

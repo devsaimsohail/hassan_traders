@@ -8,6 +8,8 @@ Visible to Partner and Accountant (03). Other roles land on their first allowed 
 
 "This month" is the 1st of the month to today (Asia/Karachi). "Last month" in comparisons means **the same days** of last month (1st to the same day number), so a half month is never compared with a full one.
 
+**Built:** figures come from `Dashboard` (app/models/dashboard.rb) using the same SQL as the lists, so they match. The charts are drawn on the server as HTML/SVG, with no chart library: hovering a month bar shows its exact amount, and clicking a customer opens their khata. "Stock value" is labelled "At average cost". Out-of-stock items get their own attention row.
+
 ## 1. Figures strip
 
 One card, five cells split by thin dividers. Each cell has a label, a big number (20px semibold) and a small line under it.

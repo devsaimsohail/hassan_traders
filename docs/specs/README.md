@@ -22,6 +22,10 @@ The clickable prototype these specs come from: https://claude.ai/artifact/Wv39ET
 | [11-khata.md](11-khata.md) | Customer ledger with running balance |
 | [12-dashboard.md](12-dashboard.md) | Home screen: figures, needs attention, charts |
 
+## Status
+
+All modules (03–12) are built on `main`. The open decisions below are still open.
+
 ## Suggested build order
 
 1. 00, 01, 02: read first. Build the shared UI pieces (list page, view page, filter bar, PDF service) before any module.

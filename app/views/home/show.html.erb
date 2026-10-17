@@ -1,13 +1,102 @@
+<% d = @dashboard %>
 <% content_for :title, "Dashboard" %>
-<% content_for :subtitle, "Your business at a glance" %>
-<div class="card p-5">
-  <h2 class="text-[15px] font-semibold">Assalam o Alaikum, <%= Current.user.name.split.first %></h2>
-  <p class="mt-1 text-muted">You are logged in to <%= Current.company.name %> as <%= Current.access.role_name %>. The dashboard figures come with the later modules. Here is what your role can do:</p>
-  <div class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-2">
-    <% @permissions.each do |label, level| %>
-      <div class="flex items-center justify-between gap-2 rounded-lg border border-line-soft px-3 py-2">
-        <span><%= label %></span><%= level_pill(level) %>
-      </div>
+<% content_for :subtitle, "Your business at a glance · #{Fmt.date(d.this_month.first)} to #{Fmt.date(d.today)}" %>
+
+<section class="card grid grid-cols-[repeat(auto-fit,minmax(min(100%,10.5rem),1fr))] overflow-hidden" id="figures">
+  <% stock_alerts = d.stock_alerts.values.sum %>
+  <% [
+       [ "Sales this month", Fmt.rs(d.sales_this), safe_join([ change_text(d.sales_change), " vs same days last month" ]) ],
+       [ "Received this month", Fmt.rs(d.received_this), safe_join([ change_text(d.received_change), " vs same days last month" ]) ],
+       [ "Customers owe you", Fmt.rs(d.receivable), safe_join([ tag.span(Fmt.rs(d.past_due), class: d.past_due.positive? ? "font-semibold text-bad" : nil), " past due" ]) ],
+       [ "You owe suppliers", Fmt.rs(d.payable), "For goods received" ],
+       [ "Stock value", Fmt.rs(d.stock_value), "At average cost" ]
+     ].each do |label, value, note| %>
+    <div class="flex min-w-0 flex-col gap-0.5 border-t border-line-soft px-4 py-3.5 sm:border-t-0 sm:border-l sm:first:border-l-0">
+      <span class="text-xs text-muted"><%= label %></span>
+      <b class="text-xl font-semibold tracking-tight whitespace-nowrap tabular-nums"><%= value %></b>
+      <span class="text-xs text-muted"><%= note %></span>
+    </div>
+  <% end %>
+</section>
+
+<div class="grid gap-3.5 lg:grid-cols-2">
+  <section class="card p-4" id="needs-attention">
+    <h2 class="text-[15px] font-semibold">Needs attention</h2>
+    <% overdue_count, overdue_sum = d.overdue_bills %>
+    <% pending_count, pending_sum = d.pending_orders %>
+    <% rows = [
+         [ overdue_count, "bill is past its due date", "bills are past their due date", "No bill is past due", overdue_sum, "bg-bad", (invoices_path(tab: "overdue", preset: "all") if policy(Invoice).index?) ],
+         [ pending_count, "order is not dispatched yet", "orders are not dispatched yet", "Every order is dispatched", pending_sum, "bg-[#2E90FA]", (sales_orders_path(tab: "pending", preset: "all") if policy(SalesOrder).index?) ],
+         [ d.stock_alerts.fetch("Low", 0), "item is running low on stock", "items are running low on stock", "No item is low on stock", nil, "bg-[#F79009]", (items_path(status: "Low") if policy(Item).index?) ]
+       ] %>
+    <% rows << [ d.stock_alerts["Out of stock"], "item is out of stock", "items are out of stock", "", nil, "bg-bad", (items_path(status: "Out of stock") if policy(Item).index?) ] if d.stock_alerts["Out of stock"].to_i.positive? %>
+    <ul class="mt-1">
+      <% rows.each do |count, one, many, none, amount, dot, path| %>
+        <li class="flex items-center gap-3 border-b border-line-soft py-2.5 last:border-b-0">
+          <span class="size-2 shrink-0 rounded-full <%= count.positive? ? dot : "bg-[#12B76A]" %>"></span>
+          <div class="flex min-w-0 flex-1 flex-col <%= "text-muted" if count.zero? %>">
+            <span><% if count.positive? %><b class="font-semibold"><%= count %></b> <%= count == 1 ? one : many %><% else %><%= none %><% end %></span>
+            <% if count.positive? && amount %><span class="text-xs text-muted"><%= Fmt.rs(amount) %></span><% end %>
+          </div>
+          <% if count.positive? && path %><%= link_to "View", path, class: "btn-ghost btn-sm" %><% end %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+
+  <section class="card p-4" id="who-owes">
+    <div class="flex items-baseline justify-between gap-3">
+      <h2 class="text-[15px] font-semibold">Who owes the most</h2>
+      <span class="text-xs text-muted"><span class="text-bad">Red</span> = past due</span>
+    </div>
+    <% debtors = d.top_debtors %>
+    <% if debtors.any? %>
+      <% top = debtors.first.balance.to_f %>
+      <ul class="mt-3 flex flex-col gap-2">
+        <% debtors.each do |x| %>
+          <li class="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-3 text-[13px]" title="<%= "#{x.name}: owes #{Fmt.rs(x.balance)}, past due #{Fmt.rs(x.overdue)}, credit limit #{Fmt.rs(x.credit_limit)}" %>">
+            <%= link_to x.name, (policy(:khata).show? ? khata_path(customer_id: x.customer_id) : customer_path(x.customer_id)), class: "truncate hover:underline" %>
+            <span class="flex h-3 overflow-hidden rounded-full bg-chip">
+              <span class="h-full bg-bad" style="width: <%= (x.overdue.clamp(0, x.balance) / top * 100).round(2) %>%"></span>
+              <span class="h-full bg-brand" style="width: <%= ((x.balance - x.overdue.clamp(0, x.balance)) / top * 100).round(2) %>%"></span>
+            </span>
+            <span class="font-medium whitespace-nowrap tabular-nums">Rs <%= Fmt.short(x.balance) %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="mt-3 text-muted">No customer owes anything.</p>
     <% end %>
-  </div>
+  </section>
+
+  <section class="card flex flex-col gap-2 p-4 lg:col-span-2" id="month-by-month">
+    <div class="flex flex-wrap items-baseline justify-between gap-3">
+      <h2 class="text-[15px] font-semibold">Month by month</h2>
+      <div class="flex flex-wrap gap-3.5 text-xs text-muted">
+        <% DashboardHelper::SERIES.each do |_key, label, color| %>
+          <span class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm" style="background: <%= color %>"></span><%= label %></span>
+        <% end %>
+      </div>
+    </div>
+    <%= month_chart(d.months, d.today) %>
+    <p class="text-xs text-muted"><%= Fmt.date(d.today).split.drop(1).first %> shows 1–<%= d.today.day %> only. Hover a bar for the exact amount.</p>
+  </section>
+
+  <section class="card overflow-hidden lg:col-span-2" id="latest-activity">
+    <div class="flex items-baseline justify-between gap-3 px-4 pt-4 pb-2">
+      <h2 class="text-[15px] font-semibold">Latest activity</h2>
+      <% if policy(ActivityLog).index? %><%= link_to "See full log", activity_logs_path, class: "btn-link text-[13px]" %><% end %>
+    </div>
+    <table class="table">
+      <tbody>
+        <% @activity.each do |log| %>
+          <tr class="<%= "[&>td:first-child]:shadow-[inset_3px_0_0_var(--color-bad)]" if log.action.in?(ActivityLogList::FLAGGED) %>">
+            <td class="whitespace-nowrap text-muted"><%= Fmt.datetime(log.created_at) %></td>
+            <td class="whitespace-nowrap"><%= log.user_name %></td>
+            <td><%= log.detail %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
 </div>

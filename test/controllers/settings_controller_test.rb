@@ -13,6 +13,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
   test "the settings menu item is hidden from staff and the page is refused" do
     sign_in_as users(:store)
     get root_path
+    follow_redirect!
     assert_select "nav a", text: "Settings", count: 0
 
     get settings_path

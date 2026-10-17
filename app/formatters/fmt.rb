@@ -31,6 +31,15 @@ module Fmt
     "#{digits[0...-3].reverse.scan(/\d{1,2}/).join(",").reverse},#{digits[-3..]}"
   end
 
+  def short(amount)
+    value = amount.to_d
+    return "#{(value / 10_000_000).round(2).to_s("F").delete_suffix(".0")} crore" if value.abs >= 10_000_000
+    return "#{(value / 100_000).round(1).to_s("F").delete_suffix(".0")} lakh" if value.abs >= 100_000
+    return "#{(value / 1000).round.to_i}k" if value.abs >= 1000
+
+    value.round.to_i.to_s
+  end
+
   def date(value)
     value&.strftime("%-d %b %Y").to_s
   end
