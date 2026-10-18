@@ -29,4 +29,14 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "#month-by-month svg rect", 18
     assert_select "#latest-activity td", text: /Bill to Khan Brothers/
   end
+
+  test "an empty business shows friendly empty states" do
+    sign_in_as users(:partner)
+    get root_path
+
+    assert_response :success
+    assert_select "#figures", text: /Nothing in the same days last month/
+    assert_select "#month-by-month svg", 0
+    assert_select "#month-by-month", text: /Nothing yet/
+  end
 end

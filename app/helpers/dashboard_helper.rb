@@ -2,9 +2,9 @@ module DashboardHelper
   SERIES = [ [ :sales, "Sales", "var(--brand)" ], [ :received, "Received", "color-mix(in srgb, var(--brand) 40%, white)" ], [ :purchases, "Purchases", "#CDD5DF" ] ].freeze
 
   def change_text(change)
-    return tag.span("no sales last month to compare", class: "text-muted") if change.nil?
+    return "Nothing in the same days last month" if change.nil?
 
-    tag.span("#{"+" if change.positive?}#{change.to_d.to_s("F").delete_suffix(".0")}%", class: change.negative? ? "font-semibold text-bad" : "font-semibold text-ok")
+    safe_join([ tag.span("#{"+" if change.positive?}#{change.to_d.to_s("F").delete_suffix(".0")}%", class: change.negative? ? "font-semibold text-bad" : "font-semibold text-ok"), " vs same days last month" ])
   end
 
   def nice_step(raw)

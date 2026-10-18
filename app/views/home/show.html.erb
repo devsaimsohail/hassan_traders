@@ -5,8 +5,8 @@
 <section class="card grid grid-cols-[repeat(auto-fit,minmax(min(100%,10.5rem),1fr))] overflow-hidden" id="figures">
   <% stock_alerts = d.stock_alerts.values.sum %>
   <% [
-       [ "Sales this month", Fmt.rs(d.sales_this), safe_join([ change_text(d.sales_change), " vs same days last month" ]) ],
-       [ "Received this month", Fmt.rs(d.received_this), safe_join([ change_text(d.received_change), " vs same days last month" ]) ],
+       [ "Sales this month", Fmt.rs(d.sales_this), change_text(d.sales_change) ],
+       [ "Received this month", Fmt.rs(d.received_this), change_text(d.received_change) ],
        [ "Customers owe you", Fmt.rs(d.receivable), safe_join([ tag.span(Fmt.rs(d.past_due), class: d.past_due.positive? ? "font-semibold text-bad" : nil), " past due" ]) ],
        [ "You owe suppliers", Fmt.rs(d.payable), "For goods received" ],
        [ "Stock value", Fmt.rs(d.stock_value), "At average cost" ]
@@ -78,8 +78,13 @@
         <% end %>
       </div>
     </div>
-    <%= month_chart(d.months, d.today) %>
-    <p class="text-xs text-muted"><%= Fmt.date(d.today).split.drop(1).first %> shows 1–<%= d.today.day %> only. Hover a bar for the exact amount.</p>
+    <% months = d.months %>
+    <% if months.all? { |m| [ m.sales, m.received, m.purchases ].all?(&:zero?) } %>
+      <p class="py-10 text-center text-muted">Nothing yet. Sales, payments and purchases appear here month by month.</p>
+    <% else %>
+      <%= month_chart(months, d.today) %>
+      <p class="text-xs text-muted"><%= Fmt.date(d.today).split.drop(1).first %> shows 1–<%= d.today.day %> only. Hover a bar for the exact amount.</p>
+    <% end %>
   </section>
 
   <section class="card overflow-hidden lg:col-span-2" id="latest-activity">
