@@ -49,6 +49,19 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_not companies(:hassan).reload.logo.attached?
   end
 
+  test "the sidebar shows only the logo when there is one, else the name and city" do
+    sign_in_as users(:partner)
+    get settings_path
+    assert_select "#company-brand", text: /Hassan Traders\s+Faisalabad/
+    assert_select "#company-brand img", count: 0
+
+    png = Base64.decode64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
+    companies(:hassan).logo.attach(io: StringIO.new(png), filename: "logo.png", content_type: "image/png")
+    get settings_path
+    assert_select "#company-brand img[alt='Hassan Traders']"
+    assert_select "#company-brand", text: /Faisalabad/, count: 0
+  end
+
   test "an accountant cannot change company settings" do
     sign_in_as users(:accountant)
     patch company_path, params: { company: { brand_color: "#000000" } }

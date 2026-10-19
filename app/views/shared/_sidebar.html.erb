@@ -1,10 +1,13 @@
 <aside class="flex min-w-0 flex-col gap-2 border-b border-line bg-white px-3 pt-3 md:gap-5 md:border-r md:border-b-0 md:py-5">
-  <div class="flex min-w-0 items-center gap-2.5 px-1.5">
-    <%= company_logo(Current.company) %>
-    <div class="min-w-0">
-      <div class="truncate font-semibold"><%= Current.company.name %></div>
-      <div class="text-xs text-muted"><%= Current.company.city %></div>
-    </div>
+  <div class="flex min-w-0 items-center px-1.5" id="company-brand">
+    <% if Current.company.logo.attached? %>
+      <%= image_tag Current.company.logo, alt: Current.company.name, class: "h-12 w-auto max-w-full object-contain" %>
+    <% else %>
+      <div class="min-w-0">
+        <div class="truncate font-semibold"><%= Current.company.name %></div>
+        <div class="text-xs text-muted"><%= Current.company.city %></div>
+      </div>
+    <% end %>
   </div>
 
   <nav aria-label="Main menu" class="flex gap-0.5 overflow-x-auto pb-1.5 md:flex-col md:overflow-visible md:pb-0">
