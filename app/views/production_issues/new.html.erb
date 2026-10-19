@@ -14,7 +14,7 @@
       <% options = @issue.raw_materials.with_stock.map { |i| [ "#{i.name} · #{Fmt.qty(i.stock)} #{i.unit} in stock", i.id ] } %>
       <% @issue.lines.each_with_index do |line, i| %>
         <div class="grid grid-cols-[minmax(0,3fr)_minmax(0,1fr)] gap-2">
-          <%= select_tag "production_issue[lines_attributes][#{i}][item_id]", options_for_select(options, line.item_id), include_blank: "Choose item", class: "input", aria: { label: "Item on line #{i + 1}" } %>
+          <%= select_tag "production_issue[lines_attributes][#{i}][item_id]", options_for_select(options, line.item_id), include_blank: "Choose item", class: "input", aria: { label: "Item on line #{i + 1}" }, data: { controller: "select" } %>
           <%= number_field_tag "production_issue[lines_attributes][#{i}][qty]", line.qty, min: 0, step: "any", class: "input", aria: { label: "Quantity on line #{i + 1}" } %>
         </div>
       <% end %>

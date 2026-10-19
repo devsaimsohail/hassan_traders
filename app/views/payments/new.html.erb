@@ -13,7 +13,7 @@
     <%= f.label :customer_id, class: "label sm:col-span-2" do %>
       Customer
       <%= f.select :customer_id, customers.map { |c| [ "#{c.name}#{" · #{c.city}" if c.city}", c.id, { data: { balance: Fmt.rs(c.balance), bills: bill_counts.fetch(c.id, 0) } } ] },
-            { include_blank: "Choose customer" }, required: true, class: "input", data: { payment_form_target: "customer", action: "change->payment-form#customerChanged" } %>
+            { include_blank: "Choose customer" }, required: true, class: "input", data: { controller: "select", payment_form_target: "customer", action: "change->payment-form#customerChanged" } %>
       <span class="hint" data-payment-form-target="info"></span>
     <% end %>
     <%= f.label :against_choice, class: "label sm:col-span-2" do %>

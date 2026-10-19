@@ -6,7 +6,7 @@
   <div class="grid gap-4 sm:grid-cols-2">
     <%= f.label :supplier_id, class: "label" do %>
       <span class="flex items-baseline justify-between">Supplier <%= link_to "+ New supplier", new_supplier_path(return_to: new_purchase_order_path), class: "btn-link text-xs" %></span>
-      <%= f.collection_select :supplier_id, Current.company.suppliers.order(:name), :id, :name, { include_blank: "Choose supplier" }, class: "input", required: true %>
+      <%= f.collection_select :supplier_id, Current.company.suppliers.order(:name), :id, :name, { include_blank: "Choose supplier" }, class: "input", required: true, data: { controller: "select" } %>
     <% end %>
     <%= f.label :date, class: "label" do %>
       PO date

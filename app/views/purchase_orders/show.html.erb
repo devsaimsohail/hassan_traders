@@ -54,7 +54,7 @@
           <summary class="cursor-pointer text-[13px] font-medium">Pay supplier · <%= Fmt.rs(po.balance) %> still to pay</summary>
           <%= form_with scope: :payment, url: pay_purchase_order_path(po), class: "mt-3 grid gap-3 sm:grid-cols-4" do |f| %>
             <%= f.label :amount, class: "label" do %>Amount (Rs)<%= f.number_field :amount, value: po.balance, min: 1, max: po.balance, required: true, class: "input" %><% end %>
-            <%= f.label :method, class: "label" do %>Method<%= f.select :method, SupplierPayment::METHODS.invert, {}, class: "input" %><% end %>
+            <%= f.label :method, class: "label" do %>Method<%= f.select :method, SupplierPayment::METHODS.invert, {}, class: "input", data: { controller: "select" } %><% end %>
             <%= f.label :ref, class: "label" do %>Cheque no. / TID <span class="hint">Not needed for cash</span><%= f.text_field :ref, class: "input" %><% end %>
             <%= f.label :date, class: "label" do %>Date<%= f.date_field :date, value: Date.current, class: "input" %><% end %>
             <div class="sm:col-span-4"><%= f.submit "Save payment", class: "btn btn-sm" %></div>

@@ -13,7 +13,7 @@
         Customer
         <%= f.select :customer_id, customers.map { |c| [ "#{c.name}#{" · #{c.city}" if c.city}", c.id,
               { data: { balance: Fmt.rs(c.balance), note: c.note } } ] },
-              { include_blank: "Choose customer" }, class: "input", required: true, data: { customer_info_target: "select", action: "change->customer-info#show" } %>
+              { include_blank: "Choose customer" }, class: "input", required: true, data: { controller: "select", customer_info_target: "select", action: "change->customer-info#show" } %>
         <span class="hint" data-customer-info-target="info" hidden></span>
       <% end %>
       <%= f.label :date, class: "label" do %>Order date<%= f.date_field :date, required: true, class: "input" %><% end %>

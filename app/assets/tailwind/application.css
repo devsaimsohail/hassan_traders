@@ -59,6 +59,84 @@
     @apply block min-h-9 w-full rounded-lg border border-input bg-white px-2.5 py-1.5 text-sm text-ink shadow-[0_1px_2px_rgba(16,24,40,.05)] placeholder:text-faint focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand-soft;
   }
 
+  /* Searchable selects (Tom Select, see select_controller.js). The wrapper keeps the select's
+     classes, so it is the .input box. The dropdown is appended to <body>. */
+  .ts-hidden-accessible {
+    @apply absolute! w-px! overflow-hidden! whitespace-nowrap! border-0! p-0! [clip-path:inset(50%)]!;
+  }
+
+  .ts-wrapper {
+    @apply flex cursor-pointer items-center bg-size-[1.1rem] bg-position-[right_0.55rem_center] bg-no-repeat pr-8;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2398A2B3' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  }
+
+  .ts-wrapper.focus {
+    @apply border-brand ring-3 ring-brand-soft;
+  }
+
+  .ts-wrapper.disabled {
+    @apply cursor-not-allowed opacity-60;
+  }
+
+  .ts-control {
+    @apply flex min-w-0 flex-1 items-center overflow-hidden outline-none;
+  }
+
+  .ts-control > .item {
+    @apply truncate;
+  }
+
+  .ts-control > input {
+    @apply min-w-0 flex-1 border-0 bg-transparent p-0 outline-none placeholder:text-faint;
+  }
+
+  .ts-wrapper.has-items .items-placeholder,
+  .ts-wrapper.dropdown-active .items-placeholder {
+    @apply hidden;
+  }
+
+  .ts-control > .item[data-value=""],
+  .ts-dropdown .option[data-value=""] {
+    @apply text-faint;
+  }
+
+  .ts-dropdown {
+    @apply absolute z-50 mt-1 min-w-48 overflow-hidden rounded-lg border border-line bg-white text-sm text-ink shadow-[0_12px_16px_-4px_rgba(16,24,40,.08),0_4px_6px_-2px_rgba(16,24,40,.03)];
+  }
+
+  .ts-dropdown .dropdown-input {
+    @apply block w-full border-0 border-b border-line-soft bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-faint;
+  }
+
+  .ts-dropdown-content {
+    @apply max-h-64 overflow-y-auto py-1;
+  }
+
+  .ts-dropdown .option,
+  .ts-dropdown .no-results {
+    @apply px-2.5 py-1.5;
+  }
+
+  .ts-dropdown [data-selectable] {
+    @apply cursor-pointer;
+  }
+
+  .ts-dropdown .option.selected {
+    @apply font-medium text-brand;
+  }
+
+  .ts-dropdown .option.active {
+    @apply bg-brand-soft;
+  }
+
+  .ts-dropdown .highlight {
+    @apply rounded-sm bg-warn-bg;
+  }
+
+  .ts-dropdown .no-results {
+    @apply text-muted;
+  }
+
   .label {
     @apply flex flex-col gap-1.5 text-[13px] font-medium text-[#344054];
   }

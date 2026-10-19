@@ -3,7 +3,7 @@
   <%= f.hidden_field :id if f.object.persisted? %>
   <%= f.hidden_field :_destroy, value: "0" if f.object.persisted? %>
   <%= f.select :item_id, items.map { |i| [ "#{i.name} (#{i.unit})", i.id, { data: { rate: (i.last_purchase_rate || i.rate).to_d.to_s("F").delete_suffix(".0"), unit: i.unit } } ] },
-        { include_blank: "Choose item" }, class: "input col-span-3 sm:col-span-1", aria: { label: "Item" }, data: { action: "change->po-lines#pickItem" } %>
+        { include_blank: "Choose item" }, class: "input col-span-3 sm:col-span-1", aria: { label: "Item" }, data: { controller: "select", action: "change->po-lines#pickItem" } %>
   <span class="relative">
     <%= f.number_field :qty, min: 0, step: "any", placeholder: "Qty", value: f.object.qty&.to_d&.to_s("F")&.delete_suffix(".0"), class: "input pr-12", aria: { label: "Quantity" }, data: { field: "qty", action: "input->po-lines#recalc" } %>
     <span class="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-xs text-muted" data-field="unit"><%= f.object.item&.unit %></span>

@@ -21,7 +21,7 @@
       <%= hidden_field_tag :dir, list.params[:dir] if list.params[:dir] %>
       <%= f.search_field :q, value: list.query, placeholder: list.search_placeholder, class: "input min-h-8 max-w-64 flex-[1_1_12rem] py-1 text-[13px] shadow-none", aria: { label: "Search" } %>
       <% if list.date_column %>
-        <%= f.select :preset, ListView::DATE_PRESETS.invert, { selected: list.preset }, class: "input min-h-8 w-auto py-1 text-[13px] shadow-none", aria: { label: "Date range" }, data: { action: "change->autosubmit#submit" } %>
+        <%= f.select :preset, ListView::DATE_PRESETS.invert, { selected: list.preset }, class: "input min-h-8 w-auto py-1 text-[13px] shadow-none", aria: { label: "Date range" }, data: { controller: "select", action: "change->autosubmit#submit" } %>
         <% if list.preset == "custom" %>
           <% from, to = list.date_range %>
           <%= f.date_field :from, value: from, class: "input min-h-8 w-auto py-1 text-[13px] shadow-none", aria: { label: "From date" }, data: { action: "change->autosubmit#submitIfValid" } %>
@@ -30,7 +30,7 @@
         <% end %>
       <% end %>
       <% list.selects.each do |s| %>
-        <%= f.select s.key, list.options_for(s), { include_blank: s.all_label, selected: list.selected(s) }, class: "input min-h-8 w-auto max-w-48 py-1 text-[13px] shadow-none", aria: { label: s.label }, data: { action: "change->autosubmit#submit" } %>
+        <%= f.select s.key, list.options_for(s), { include_blank: s.all_label, selected: list.selected(s) }, class: "input min-h-8 w-auto max-w-48 py-1 text-[13px] shadow-none", aria: { label: s.label }, data: { controller: "select", action: "change->autosubmit#submit" } %>
       <% end %>
       <% if list.filtering? %>
         <%= link_to "Clear filters", url_for(only_path: true), class: "btn-link px-1 text-[13px]" %>
