@@ -1,5 +1,5 @@
 <nav class="flex gap-4 border-b border-line" aria-label="Stock pages">
-  <% [ [ "Stock in hand", items_path ], [ "In / out history", stock_moves_path ] ].each do |label, path| %>
+  <% [ [ "Stock in hand", items_path ], [ "In / out history", stock_moves_path ], [ "Units", units_path ] ].each do |label, path| %>
     <% on = request.path == path %>
     <%= link_to label, path, class: "-mb-px border-b-2 px-1 pb-2 font-medium #{on ? "border-brand text-brand" : "border-transparent text-muted hover:text-ink"}", aria: { current: (on ? "page" : nil) } %>
   <% end %>

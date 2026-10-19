@@ -8,6 +8,7 @@ company = Company.find_or_create_by!(name: "Hassan Traders") do |c|
   c.phone = "041-2600000"
   c.mobile = "0300-6600000"
 end
+Unit.seed_defaults_for(company)
 
 [
   [ "Muhammad Hassan", "03001110001", :partner, "Faisalabad" ],

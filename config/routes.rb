@@ -54,6 +54,7 @@ Rails.application.routes.draw do
   scope "stock" do
     resources :items, except: :destroy
     resources :stock_moves, path: "moves", only: :index
+    resources :units, except: :show
     resources :production_issues, path: "issues", only: %i[ new create ]
   end
 

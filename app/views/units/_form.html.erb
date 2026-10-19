@@ -1,0 +1,17 @@
+<%= form_with model: unit, class: "flex flex-col gap-4" do |f| %>
+  <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to] %>
+  <% if unit.errors.any? %>
+    <p class="rounded-lg bg-bad-bg px-3.5 py-2.5 text-[13px] text-bad" role="alert"><%= unit.errors.full_messages.to_sentence %></p>
+  <% end %>
+  <%= f.label :name, class: "label" do %>
+    Unit name <span class="hint">Short, the way you say it, e.g. kg, meter, than, dozen</span>
+    <%= f.text_field :name, required: true, autofocus: true, maxlength: 20, placeholder: "e.g. gaz", class: "input" %>
+  <% end %>
+  <% if unit.persisted? && (count = unit.items.count).positive? %>
+    <p class="text-[13px] text-muted"><%= count %> <%= "item".pluralize(count) %> use this unit. Renaming it changes them too.</p>
+  <% end %>
+  <div class="flex flex-wrap gap-2">
+    <%= f.submit unit.persisted? ? "Save unit" : "Add unit", class: "btn" %>
+    <%= link_to "Cancel", params[:return_to].presence_in([ new_item_path ]) || units_path, class: "btn-ghost" %>
+  </div>
+<% end %>

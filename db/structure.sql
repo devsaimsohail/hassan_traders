@@ -814,6 +814,38 @@ ALTER SEQUENCE public.suppliers_id_seq OWNED BY public.suppliers.id;
 
 
 --
+-- Name: units; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.units (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    name character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: units_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.units_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: units_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.units_id_seq OWNED BY public.units.id;
+
+
+--
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1004,6 +1036,13 @@ ALTER TABLE ONLY public.suppliers ALTER COLUMN id SET DEFAULT nextval('public.su
 
 
 --
+-- Name: units id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.units ALTER COLUMN id SET DEFAULT nextval('public.units_id_seq'::regclass);
+
+
+--
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1176,6 +1215,14 @@ ALTER TABLE ONLY public.supplier_payments
 
 ALTER TABLE ONLY public.suppliers
     ADD CONSTRAINT suppliers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: units units_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.units
+    ADD CONSTRAINT units_pkey PRIMARY KEY (id);
 
 
 --
@@ -1670,6 +1717,20 @@ CREATE UNIQUE INDEX index_suppliers_on_company_id_and_name ON public.suppliers U
 
 
 --
+-- Name: index_units_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_units_on_company_id ON public.units USING btree (company_id);
+
+
+--
+-- Name: index_units_on_company_id_and_lower_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_units_on_company_id_and_lower_name ON public.units USING btree (company_id, lower((name)::text));
+
+
+--
 -- Name: index_users_on_disabled_by_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1874,6 +1935,14 @@ ALTER TABLE ONLY public.stock_moves
 
 ALTER TABLE ONLY public.supplier_payments
     ADD CONSTRAINT fk_rails_53508e4704 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: units fk_rails_54f69ec7a8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.units
+    ADD CONSTRAINT fk_rails_54f69ec7a8 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -2115,6 +2184,7 @@ ALTER TABLE ONLY public.invoice_lines
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261020000001'),
 ('20261019000001'),
 ('20261018000013'),
 ('20261018000012'),

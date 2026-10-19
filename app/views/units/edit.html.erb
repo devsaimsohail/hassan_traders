@@ -1,0 +1,12 @@
+<% content_for :title, "Edit unit #{@unit.name}" %>
+<div class="card max-w-md p-5"><%= render "form", unit: @unit %></div>
+
+<% if policy(@unit).destroy? %>
+  <div class="card max-w-md p-5">
+    <% if @unit.items.exists? %>
+      <p class="text-[13px] text-muted">This unit is in use, so it can't be deleted. Change those items to another unit first.</p>
+    <% else %>
+      <%= button_to "Delete unit", unit_path(@unit), method: :delete, class: "btn-ghost btn-sm text-bad", form: { data: { turbo_confirm: "Delete the unit #{@unit.name}?" } } %>
+    <% end %>
+  </div>
+<% end %>

@@ -13,12 +13,20 @@ Know what is in the godown and what it is worth, with every change traceable. **
 | id / code | text | `R01`… for raw material, `P01`… for products, unique per company |
 | name | text | e.g. "Cotton Yarn 20s", "Lawn Suit 3-Piece" |
 | category | enum | `Raw Material` (kacha maal) or `Product` (tayyar maal) |
-| unit | text | kg, meter, cone, gross, pcs, suit, set… |
+| unit | text | Picked from the company's **units** list (kg, meter, than, pcs, suit…). Stores the unit name |
 | rate | money | Purchase rate (avg cost). See costing below |
 | sale_price | money | Products only |
 | reorder_level | number | At or below this, the item is "Low" |
 | opening_qty | number | Stock on the go-live date |
 | default_supplier_id | fk | Pre-fills the supplier on a new PO |
+
+**units**
+
+| Field | Type | Notes |
+|---|---|---|
+| name | text | e.g. kg, gaz, than, dozen. Unique per company, ignoring case |
+
+Every new company starts with the basic units: pcs, dozen, gross, kg, gram, meter, gaz, than, cone, roll, suit, set, bag, carton, litre. More can be added on the Units tab.
 
 **stock_moves** (append-only; corrections are new reversing moves)
 
@@ -49,6 +57,7 @@ Know what is in the godown and what it is worth, with every change traceable. **
 3. Stock cannot go below zero. Dispatch and issue are refused with "Only 40 set in stock".
 4. **Costing (decided): weighted average cost.** On each PO receipt, new rate = (stock before × old rate + received qty × PO rate) ÷ (stock before + received qty). If there was no stock, the PO rate becomes the rate. The rate is stored with paisa (2 decimals). The item also keeps `last_purchase_rate`, `last_purchase_on` and its usual supplier, all set on receipt. The item page shows "Average cost" and "Last bought Rs 12 on 18 Oct (+20%)".
 5. Changing an item's rate or reorder level is an edit with old and new values in the log.
+6. Units are managed on Stock › Units by anyone with Stock = yes; view-only roles see the list. Adding, renaming and deleting a unit is logged under Stock. Renaming a unit renames it on its items in the same transaction. A unit used by any item can't be deleted.
 
 ## Screens
 
@@ -89,6 +98,10 @@ Two tabs at the page top: **Stock in hand** and **In / out history**.
   - New PO for this item (if role can make POs). Opens the PO form with this item and its default supplier pre-filled.
   - Stock card PDF (always)
   - Change reorder level (Partner or Store Incharge)
+
+### Units tab
+
+Third tab on the Stock page, after "In / out history". Lists each unit with how many items use it, with search, sort and PDF like every list. A row click opens the edit form (rename, or delete when unused). On the item form, Unit is a searchable select of these units with an "Add a unit" link.
 
 ### Production issue (Store Incharge, Partner)
 

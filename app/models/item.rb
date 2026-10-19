@@ -1,7 +1,6 @@
 class Item < ApplicationRecord
   CATEGORIES = { "raw_material" => "Raw material", "product" => "Finished goods" }.freeze
   CODE_PREFIX = { "raw_material" => "R", "product" => "P" }.freeze
-  UNITS = %w[kg meter cone gross pcs suit set dozen bag roll litre].freeze
   STATUSES = [ "OK", "Low", "Out of stock" ].freeze
   EDITABLE = %w[name category unit rate sale_price reorder_level opening_qty].freeze
 
@@ -37,6 +36,7 @@ class Item < ApplicationRecord
   validates :code, presence: true, uniqueness: { scope: :company_id }
   validates :category, inclusion: { in: CATEGORIES.keys, message: "must be chosen" }
   validates :unit, presence: true
+  validate :unit_is_a_company_unit
   validates :rate, numericality: { greater_than_or_equal_to: 0 }
   validates :sale_price, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :reorder_level, :opening_qty, numericality: { greater_than_or_equal_to: 0 }
@@ -70,6 +70,12 @@ class Item < ApplicationRecord
   end
 
   private
+    def unit_is_a_company_unit
+      return if unit.blank? || company.nil? || !will_save_change_to_unit?
+
+      errors.add(:unit, "must be one of your units (Stock › Units)") unless company.units.exists?(name: unit)
+    end
+
     def assign_code
       return if code.present? || !CODE_PREFIX.key?(category) || company.nil?
 

@@ -23,6 +23,7 @@ class Company < ApplicationRecord
   has_many :role_permissions, dependent: :delete_all
   has_many :activity_logs, dependent: :restrict_with_exception
   has_many :items, dependent: :restrict_with_exception
+  has_many :units, dependent: :delete_all
   has_many :stock_moves, dependent: :restrict_with_exception
   has_many :suppliers, dependent: :restrict_with_exception
   has_many :purchase_orders, dependent: :restrict_with_exception
@@ -40,6 +41,7 @@ class Company < ApplicationRecord
   validate :logo_is_small_image
 
   after_create :create_default_permissions
+  after_create :create_default_units
 
   def brand_ink
     r, g, b = brand_color.delete("#").scan(/../).map { |hex| linear(hex.to_i(16) / 255.0) }
@@ -78,5 +80,9 @@ class Company < ApplicationRecord
 
     def create_default_permissions
       RolePermission.seed_defaults_for(self)
+    end
+
+    def create_default_units
+      Unit.seed_defaults_for(self)
     end
 end

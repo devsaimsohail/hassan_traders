@@ -6,7 +6,7 @@ class PagesLoadTest < ActionDispatch::IntegrationTest
     paths = [
       root_path, settings_path, new_person_path, edit_password_path, activity_logs_path,
       items_path, new_item_path, item_path(items(:yarn)), edit_item_path(items(:yarn)),
-      stock_moves_path, new_production_issue_path,
+      stock_moves_path, new_production_issue_path, units_path, new_unit_path, edit_unit_path(units(:kg)),
       purchase_orders_path, new_purchase_order_path, suppliers_path, new_supplier_path, edit_supplier_path(suppliers(:kohinoor)),
       customers_path, new_customer_path, customer_path(customers(:khan)), edit_customer_path(customers(:khan)),
       sales_orders_path, new_sales_order_path, invoices_path, payments_path, new_payment_path, khata_path

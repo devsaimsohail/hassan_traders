@@ -25,9 +25,8 @@
   <% end %>
 
   <%= f.label :unit, class: "label" do %>
-    Unit <span class="hint">How you count it: kg, meter, pcs, suit…</span>
-    <%= f.text_field :unit, required: true, list: "units", class: "input" %>
-    <datalist id="units"><% Item::UNITS.each do |u| %><option value="<%= u %>"></option><% end %></datalist>
+    <span>Unit <span class="hint">How you count it. Not in the list? <%= link_to "Add a unit", new_unit_path(return_to: (new_item_path if item.new_record?)), class: "btn-link text-xs" %></span></span>
+    <%= f.select :unit, Current.company.units.order(Arel.sql("lower(name)")).pluck(:name), { include_blank: "Choose unit" }, required: true, class: "input", data: { controller: "select" } %>
   <% end %>
 
   <%= f.label :rate, class: "label" do %>

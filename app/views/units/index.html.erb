@@ -1,0 +1,6 @@
+<% content_for :title, "Stock" %>
+<% content_for :subtitle, "Units you count stock in. Items pick their unit from this list." %>
+<% content_for :view_only, "1" unless policy(Unit).create? %>
+<%= render "items/tabs" %>
+<%= render "lists/list", list: @list, row_path: (->(unit) { edit_unit_path(unit) } if policy(Unit).update?),
+      actions: (link_to(new_unit_path, class: "btn btn-sm") { icon(:plus, classes: "size-4") + " Add unit" } if policy(Unit).create?) %>
