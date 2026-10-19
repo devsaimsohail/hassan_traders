@@ -59,5 +59,6 @@ These are not settled. Ask the owner before building the parts they touch.
 - **Sales tax (GST) on bills.** Not in v1. Company NTN and STRN are stored and printed already.
 - **Partner approval and partnership shares.** Removed from module 03 for now; roles come from rolify only.
 - **Purchase order status.** The owner asked to hide PO statuses in the UI for now (only a Draft tab is shown). The approval workflow still exists underneath. See 06.
+- **Customer credit limit and payment terms.** The owner asked to hide both in the UI for now. The data stays; new customers get no limit and 30-day terms. See 07.
 - **Supplier khata.** Only a customer khata is specified. A matching supplier khata is a likely next request.
 - **Urdu script.** Labels are English with familiar Roman Urdu terms. Urdu (Nastaliq) labels may be added later; keep all UI strings in one translation file from day one.

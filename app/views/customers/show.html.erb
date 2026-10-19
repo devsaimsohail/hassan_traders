@@ -8,7 +8,6 @@
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div class="flex items-center gap-2.5">
       <h2 class="text-lg font-semibold"><%= c.name %></h2>
-      <%= pill("Over credit limit", "pill-bad") if c.over_limit == "Yes" %>
     </div>
     <div class="flex flex-wrap gap-1.5">
       <% if policy(:khata).show? %><%= link_to "Open khata", khata_path(customer_id: c.id), class: "btn btn-sm" %><% end %>
@@ -19,8 +18,7 @@
   </div>
 
   <dl class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-x-5 gap-y-3">
-    <% [ [ "Mobile", c.phone.presence || "Not set" ], [ "City", c.city.presence || "Not set" ], [ "Credit limit", Fmt.rs(c.credit_limit) ],
-         [ "Payment terms", "#{c.terms_days} days" ], [ "Opening balance", Fmt.rs(c.opening_balance) ],
+    <% [ [ "Mobile", c.phone.presence || "Not set" ], [ "City", c.city.presence || "Not set" ], [ "Opening balance", Fmt.rs(c.opening_balance) ],
          [ "Last payment", c.last_payment ? Fmt.date(c.last_payment) : "None yet" ] ].each do |label, value| %>
       <div><dt class="text-xs text-muted"><%= label %></dt><dd class="font-medium"><%= value %></dd></div>
     <% end %>

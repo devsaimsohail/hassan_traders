@@ -2,7 +2,7 @@ class Dashboard
   Month = Data.define(:start, :sales, :received, :purchases) do
     def label(today) = start.strftime("%b") + (start == today.beginning_of_month ? " (1–#{today.day})" : "")
   end
-  Debtor = Data.define(:customer_id, :name, :city, :balance, :overdue, :credit_limit)
+  Debtor = Data.define(:customer_id, :name, :city, :balance, :overdue)
 
   attr_reader :company, :today
 
@@ -49,7 +49,7 @@ class Dashboard
 
   def top_debtors(limit = 8)
     company.customers.with_balances(today).where("customers.balance > 0").reorder("customers.balance DESC").limit(limit)
-      .map { |c| Debtor.new(customer_id: c.id, name: c.name, city: c.city, balance: c.balance.to_i, overdue: c.overdue.to_i, credit_limit: c.credit_limit) }
+      .map { |c| Debtor.new(customer_id: c.id, name: c.name, city: c.city, balance: c.balance.to_i, overdue: c.overdue.to_i) }
   end
 
   def months(count = 6)

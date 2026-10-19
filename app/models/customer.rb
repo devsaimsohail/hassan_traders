@@ -2,6 +2,7 @@ class Customer < ApplicationRecord
   RECEIVED = "COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.customer_id = customers.id AND p.reversed_at IS NULL), 0)".freeze
   LAST_PAYMENT = "(SELECT MAX(p.date) FROM payments p WHERE p.customer_id = customers.id AND p.reversed_at IS NULL)".freeze
   EDITABLE = %w[name city area phone credit_limit terms_days note].freeze
+  DEFAULT_TERMS_DAYS = 30
 
   belongs_to :company
   has_many :sales_orders, dependent: :restrict_with_exception
@@ -31,16 +32,28 @@ class Customer < ApplicationRecord
 
   normalizes :name, :city, :area, with: ->(v) { v.strip.squeeze(" ").presence }
   normalizes :phone, with: ->(v) { v.strip.presence }
+  normalizes :note, with: ->(v) { v.strip.presence }
 
   validates :name, presence: true, uniqueness: { scope: :company_id, case_sensitive: false }
   validates :code, presence: true, uniqueness: { scope: :company_id }
-  validates :credit_limit, :terms_days, :opening_balance, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :terms_days, :opening_balance, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :credit_limit, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   before_validation :assign_code, on: :create
+  before_validation :fill_blank_defaults
+
+  def self.limit_text(amount) = amount.nil? ? "No limit" : Fmt.rs(amount)
 
   def place = [ area, city ].compact_blank.join(", ")
 
   private
+    # Only the name is required. Blank terms mean 30 days and a blank opening balance means 0.
+    # A blank credit limit stays nil and means "no limit".
+    def fill_blank_defaults
+      self.terms_days ||= DEFAULT_TERMS_DAYS
+      self.opening_balance ||= 0
+    end
+
     def assign_code
       return if code.present? || company.nil?
 

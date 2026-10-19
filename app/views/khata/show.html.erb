@@ -11,13 +11,10 @@
       <div>
         <div class="flex items-center gap-2.5">
           <h2 class="text-base font-semibold"><%= link_to c.name, customer_path(c), class: "hover:underline" %></h2>
-          <%= pill("Over credit limit", "pill-bad") if c.over_limit == "Yes" %>
         </div>
         <p class="mt-0.5 flex flex-wrap gap-x-4 text-[12.5px] text-muted">
           <% if c.place.present? %><span><%= c.place %></span><% end %>
           <% if c.phone.present? %><span>Mobile <b class="font-semibold text-ink"><%= c.phone %></b></span><% end %>
-          <span>Credit limit <b class="font-semibold text-ink"><%= Fmt.rs(c.credit_limit) %></b></span>
-          <span>Terms <b class="font-semibold text-ink"><%= c.terms_days %> days</b></span>
         </p>
       </div>
       <div class="flex flex-col items-end gap-0.5 text-right text-[12.5px] text-muted">

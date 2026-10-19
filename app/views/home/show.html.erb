@@ -54,7 +54,7 @@
       <% top = debtors.first.balance.to_f %>
       <ul class="mt-3 flex flex-col gap-2">
         <% debtors.each do |x| %>
-          <li class="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-3 text-[13px]" title="<%= "#{x.name}: owes #{Fmt.rs(x.balance)}, past due #{Fmt.rs(x.overdue)}, credit limit #{Fmt.rs(x.credit_limit)}" %>">
+          <li class="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-3 text-[13px]" title="<%= "#{x.name}: owes #{Fmt.rs(x.balance)}, past due #{Fmt.rs(x.overdue)}" %>">
             <%= link_to x.name, (policy(:khata).show? ? khata_path(customer_id: x.customer_id) : customer_path(x.customer_id)), class: "truncate hover:underline" %>
             <span class="flex h-3 overflow-hidden rounded-full bg-chip">
               <span class="h-full bg-bad" style="width: <%= (x.overdue.clamp(0, x.balance) / top * 100).round(2) %>%"></span>

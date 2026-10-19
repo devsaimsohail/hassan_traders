@@ -20,7 +20,7 @@ class CustomersController < ApplicationController
   end
 
   def new
-    @customer = Current.company.customers.new(terms_days: 30)
+    @customer = Current.company.customers.new
     authorize @customer
   end
 
@@ -59,8 +59,7 @@ class CustomersController < ApplicationController
     end
 
     def customer_params(creating: false)
-      fields = %i[name city area phone terms_days note]
-      fields << :credit_limit if creating || policy(@customer || Customer).change_credit_limit?
+      fields = %i[name city area phone note]
       fields << :opening_balance if creating
       params.require(:customer).permit(*fields)
     end
@@ -71,7 +70,7 @@ class CustomersController < ApplicationController
       labels = { "credit_limit" => "credit limit", "terms_days" => "payment terms", "phone" => "mobile" }
       ActivityLog.record!(action: "Edited", section: "Customers", ref: @customer.code,
         detail: "Changed #{changes.keys.map { |k| labels.fetch(k, k) }.to_sentence} for #{@customer.name}" +
-          (changes["credit_limit"] ? ": #{Fmt.rs(changes["credit_limit"].first)} → #{Fmt.rs(changes["credit_limit"].last)}" : ""),
+          (changes["credit_limit"] ? ": #{Customer.limit_text(changes["credit_limit"].first)} → #{Customer.limit_text(changes["credit_limit"].last)}" : ""),
         old_value: changes.transform_values(&:first), new_value: changes.transform_values(&:last))
     end
 end

@@ -25,11 +25,11 @@ class SalesOrdersControllerTest < ActionDispatch::IntegrationTest
     assert so.reload.delivered?
   end
 
-  test "booking past the credit limit shows a warning" do
+  test "booking past the credit limit shows no warning while limits are hidden" do
     sign_in_as users(:partner)
     post sales_orders_path, params: order_params(qty: "400")
 
-    assert_match "over their credit limit", flash[:alert]
+    assert_nil flash[:alert]
   end
 
   test "a short dispatch is explained" do

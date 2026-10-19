@@ -30,6 +30,8 @@ Keep every wholesale customer with their credit terms, and show at a glance how 
 
 ## Rules
 
+**Owner's current instruction:** hide credit limit and payment terms in the UI for now. Only the customer name is required on the add / edit form. The columns stay in the data: new customers get no credit limit and 30-day terms, and bills still take their due date from `terms_days`. While hidden, there is no "Over credit limit" tab, pill, column or total, and booking an order shows no credit warning. The rest of this spec describes the full design for when they come back.
+
 - Changing the credit limit is Partner-only and logs old → new.
 - **Optional (ask the owner):** warn, or block, a new sales order when the customer is over their limit or has a credit-hold note.
 - Customers are never deleted. They can be marked inactive.

@@ -8,30 +8,24 @@ class CustomerList < ListView
   tab :all, "All"
   tab :udhaar, "Has udhaar", ->(s) { s.where("customers.balance > 0") }
   tab :overdue, "Overdue", ->(s) { s.where("customers.overdue > 0") }
-  tab :over_limit, "Over credit limit", ->(s) { s.where(over_limit: "Yes") }
 
   select :city, "City", all_label: "All cities", column: "customers.city"
 
   column :name, "Customer", sort: "customers.name", nowrap: true, pdf_width: 18
   column :city, "City", sort: "customers.city", pdf_width: 9
   column :phone, "Mobile", nowrap: true, optional: true, pdf_width: 10
-  column :credit_limit, "Credit limit", sort: "customers.credit_limit", format: :rs, align: :right, optional: true, pdf_width: 10
   column :billed, "Bills", format: :rs, align: :right, pdf_only: true, pdf_width: 11
   column :received, "Received", format: :rs, align: :right, pdf_only: true, pdf_width: 11
   column :balance, "Udhaar", sort: "customers.balance", format: :rs, align: :right, pdf_width: 11
   column :overdue, "Past due", sort: "customers.overdue", format: :rs, align: :right, pdf_width: 10
   column :last_payment, "Last payment", sort: "customers.last_payment", format: :date, optional: true, pdf_width: 9
-  column :over_limit, "Over limit", sort: "customers.over_limit", format: :pill, tones: { "Yes" => "pill-bad", "No" => "pill-mute" }
-
-  def flagged?(row) = row.over_limit == "Yes"
 
   def totals
-    sums = scope.pick(Arel.sql("COUNT(*), COALESCE(SUM(customers.balance), 0), COALESCE(SUM(customers.overdue), 0), COUNT(*) FILTER (WHERE customers.over_limit = 'Yes')"))
+    sums = scope.pick(Arel.sql("COUNT(*), COALESCE(SUM(customers.balance), 0), COALESCE(SUM(customers.overdue), 0)"))
     [
       [ "Customers", Fmt.lakh(sums[0]) ],
       [ "Total udhaar", Fmt.rs(sums[1]) ],
-      [ "Past due", Fmt.rs(sums[2]), :bad ],
-      [ "Over limit", Fmt.lakh(sums[3]), :warn ]
+      [ "Past due", Fmt.rs(sums[2]), :bad ]
     ]
   end
 

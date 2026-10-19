@@ -10,7 +10,7 @@ class KhataPdf
     ReportPdf.new(
       company: c.company, user: @user, title: "Khata statement",
       meta: [ [ "Customer: #{c.name}", c.place.presence, c.phone.presence && "Mobile: #{c.phone}" ].compact.join("   |   "),
-              "Period: #{k.period_text}   |   Credit limit: #{Fmt.rs(c.credit_limit)}   |   Terms: #{c.terms_days} days" ],
+              "Period: #{k.period_text}" ],
       summary: [ [ "Opening (B/F)", Fmt.rs(k.opening) ], [ "Naam (bills)", Fmt.rs(k.naam) ], [ "Jama (received)", Fmt.rs(k.jama) ], [ "Closing baqaya", Fmt.rs(k.closing) ] ],
       columns: [ { label: "Date", width: 11 }, { label: "Type", width: 7 }, { label: "Ref", width: 10 }, { label: "Detail", width: 35 },
                  { label: "Naam (Dr)", width: 12, align: :right }, { label: "Jama (Cr)", width: 12, align: :right }, { label: "Baqaya", width: 13, align: :right } ],

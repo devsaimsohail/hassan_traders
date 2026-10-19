@@ -265,7 +265,7 @@ CREATE TABLE public.customers (
     city character varying,
     area character varying,
     phone character varying,
-    credit_limit integer DEFAULT 0 NOT NULL,
+    credit_limit integer,
     terms_days integer DEFAULT 30 NOT NULL,
     opening_balance integer DEFAULT 0 NOT NULL,
     note character varying,
@@ -2115,6 +2115,7 @@ ALTER TABLE ONLY public.invoice_lines
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261019000001'),
 ('20261018000013'),
 ('20261018000012'),
 ('20261018000011'),

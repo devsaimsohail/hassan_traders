@@ -36,8 +36,7 @@ class SalesOrdersController < ApplicationController
 
     if @sales_order.save
       @sales_order.book!(by: Current.user)
-      warning = @sales_order.credit_warning
-      redirect_to sales_order_path(@sales_order), notice: "Order booked. The godown can dispatch it now.", alert: warning
+      redirect_to sales_order_path(@sales_order), notice: "Order booked. The godown can dispatch it now."
     else
       render :new, status: :unprocessable_content
     end

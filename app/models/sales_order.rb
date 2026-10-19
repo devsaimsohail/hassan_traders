@@ -32,6 +32,8 @@ class SalesOrder < ApplicationRecord
   end
 
   def credit_warning
+    return if customer.credit_limit.nil?
+
     current = Customer.with_balances.find(customer_id)
     after = current.balance + amount
     return "#{customer.name} is already over their credit limit of #{Fmt.rs(customer.credit_limit)}." if current.balance > customer.credit_limit
