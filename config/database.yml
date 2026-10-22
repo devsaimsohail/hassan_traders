@@ -84,9 +84,14 @@ test:
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
+# With Kamal, DB_HOST is the Postgres accessory's container (hassan_traders-db),
+# see config/deploy.yml. The Solid Cache, Queue and Cable schemas are Ruby files
+# (db/*_schema.rb) while the app schema is db/structure.sql, hence schema_format.
 production:
   primary: &primary_production
     <<: *default
+    host: <%= ENV["DB_HOST"] %>
+    port: <%= ENV.fetch("DB_PORT", 5432) %>
     database: hassan_traders_production
     username: hassan_traders
     password: <%= ENV["HASSAN_TRADERS_DATABASE_PASSWORD"] %>
@@ -94,11 +99,14 @@ production:
     <<: *primary_production
     database: hassan_traders_production_cache
     migrations_paths: db/cache_migrate
+    schema_format: ruby
   queue:
     <<: *primary_production
     database: hassan_traders_production_queue
     migrations_paths: db/queue_migrate
+    schema_format: ruby
   cable:
     <<: *primary_production
     database: hassan_traders_production_cable
     migrations_paths: db/cable_migrate
+    schema_format: ruby

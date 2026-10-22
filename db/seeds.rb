@@ -1,4 +1,10 @@
 # Development data. Everyone below logs in with their mobile number and DEV_PASSWORD.
+# db:prepare seeds a new database, so skip this in production (see docs/deploy.md).
+if Rails.env.production? && ENV["SEED_DEMO_DATA"].blank?
+  puts "Skipping demo seeds in production. Set SEED_DEMO_DATA=1 to load them anyway."
+  return
+end
+
 DEV_PASSWORD = "hassan-dev-2026"
 
 company = Company.find_or_create_by!(name: "Hassan Traders") do |c|

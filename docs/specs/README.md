@@ -42,7 +42,7 @@ All modules (03–12) are built on `main`. The open decisions below are still op
 - **Hotwire** (Turbo and Stimulus) with **importmap**. No Node build and no JS bundle.
 - **Tailwind CSS** through `tailwindcss-rails` (standalone binary). Map the colour tokens in 01-shared-ui.md to Tailwind theme colours.
 - Filters, sorting and tabs are plain GET forms and links, so the URL holds the filter state (01). Use Turbo Frames for the table and Turbo Drive for view pages.
-- Background jobs, cache and websockets use the built-in Solid Queue, Solid Cache and Solid Cable. No Redis.
+- Cache and websockets use the built-in Solid Cache and Solid Cable. No Redis. Background jobs run on Rails' async adapter in production for now, to fit a 1 GB server; the only jobs are Active Storage's logo jobs. Solid Queue is installed for when durable jobs are needed (see `docs/deploy.md`).
 - Planned gems:
   - `pundit` for access checks and `rolify` for company-scoped roles (03)
   - `prawn` and `prawn-table` for PDFs (02)

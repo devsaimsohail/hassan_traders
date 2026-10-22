@@ -1,0 +1,84 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "10cc775751d2c1c6803ca25a9130197ebfde4f7354feb8ef0aaf7f29c39456b2",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/invoice.rb",
+      "line": 17,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "from(\"#{status_table_sql(on)} AS invoices\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Invoice",
+        "method": "with_status"
+      },
+      "user_input": "status_table_sql(on)",
+      "confidence": "Medium",
+      "cwe_id": [
+        89
+      ],
+      "note": "The date is quoted with connection.quote(on.to_date); the rest are constant SQL fragments."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "7a968b10b96a17025b9916d2dbb94c32e747de5f048094823d03e168db85ccb2",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/customer.rb",
+      "line": 12,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "from(\"#{balances_sql(on)} AS customers\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Customer",
+        "method": "with_balances"
+      },
+      "user_input": "balances_sql(on)",
+      "confidence": "Medium",
+      "cwe_id": [
+        89
+      ],
+      "note": "The only interpolated value is Invoice.status_table_sql(on), which quotes the date with connection.quote(on.to_date); the rest are constant SQL fragments."
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 4,
+      "fingerprint": "d87dadc7f3b3fd73feed58ea676745993a0cee0748564b58e75311d1b1a506c6",
+      "check_name": "LinkToHref",
+      "message": "Unsafe parameter value in `link_to` href",
+      "file": "app/views/units/_form.html.erb",
+      "line": 15,
+      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
+      "code": "link_to(\"Cancel\", (params[:return_to].presence_in([new_item_path]) or units_path), :class => \"btn-ghost\")",
+      "render_path": [
+        {
+          "type": "template",
+          "name": "units/edit",
+          "line": 2,
+          "file": "app/views/units/edit.html.erb",
+          "rendered": {
+            "name": "units/_form",
+            "file": "app/views/units/_form.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "units/_form"
+      },
+      "user_input": "params[:return_to].presence_in([new_item_path])",
+      "confidence": "High",
+      "cwe_id": [
+        79
+      ],
+      "note": "return_to is allowlisted with presence_in([new_item_path]); any other value falls back to units_path."
+    }
+  ],
+  "brakeman_version": "8.1.0"
+}

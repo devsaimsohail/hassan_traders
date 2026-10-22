@@ -1,73 +1,71 @@
+# Kamal deploy config. See docs/deploy.md for the first deploy.
+
 # Name of your application. Used to uniquely configure containers.
 service: hassan_traders
 
-# Name of the container image (use your-user/app-name on external registries).
-image: hassan_traders
+# Name of the container image (your-user/app-name on the registry).
+image: devsaimsohail/hassan_traders
 
-# Deploy to these servers.
+# One server runs the app, Solid Queue (inside Puma) and the Postgres accessory.
 servers:
   web:
-    - 192.168.0.1
-  # job:
-  #   hosts:
-  #     - 192.168.0.1
-  #   cmd: bin/jobs
+    hosts:
+      # EC2 instance. Use an Elastic IP so the address survives a stop/start.
+      - &server_ip 15.252.88.73
+    # The app uses ~215 MB under load on the t3.micro (1 GB). The limit stops a runaway
+    # process from starving Postgres and the OS; Docker restarts the container if it's hit.
+    options:
+      memory: 512m
 
-# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
-# If used with Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
-#
-# Using an SSL proxy like this requires turning on config.assume_ssl and config.force_ssl in production.rb!
-#
-# Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
-#
-# proxy:
-#   ssl: true
-#   host: app.example.com
+# kamal-proxy gets a Let's Encrypt certificate for this host and terminates SSL.
+# config.assume_ssl and config.force_ssl are on in config/environments/production.rb.
+# The domain's A record must point at the server, and the EC2 security group must
+# allow inbound 80 and 443, before the certificate can be issued.
+# If used with Cloudflare, set encryption mode in SSL/TLS settings to "Full".
+proxy:
+  ssl: true
+  hosts:
+    - hassantrader.com
+    - www.hassantrader.com
 
-# Where you keep your container images.
+# Images go to GitHub's container registry as ghcr.io/devsaimsohail/hassan_traders.
 registry:
-  # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
-  server: localhost:5555
+  server: ghcr.io
+  username: devsaimsohail
 
-  # Needed for authenticated registries.
-  # username: your-user
-
-  # Always use an access token rather than real password when possible.
-  # password:
-  #   - KAMAL_REGISTRY_PASSWORD
+  # A classic GitHub token with write:packages, read from .kamal/secrets.
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:
   secret:
     - RAILS_MASTER_KEY
+    - HASSAN_TRADERS_DATABASE_PASSWORD
   clear:
-    # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
-    # When you start using multiple servers, you should split out job processing to a dedicated machine.
-    SOLID_QUEUE_IN_PUMA: true
+    # Jobs run on Rails' async adapter inside Puma (config/environments/production.rb).
+    # If production switches to Solid Queue, uncomment this to run its supervisor in Puma.
+    # SOLID_QUEUE_IN_PUMA: true
 
-    # Set number of processes dedicated to Solid Queue (default: 1)
-    # JOB_CONCURRENCY: 3
-
-    # Set number of cores available to the application on each server (default: 1).
+    # One Puma process (no cluster) keeps memory low on the 1 GB server.
     # WEB_CONCURRENCY: 2
 
-    # Match this to any external database server to configure Active Record correctly
-    # Use hassan_traders-db for a db accessory server on same machine via local kamal docker network.
-    # DB_HOST: 192.168.0.2
+    # The Postgres accessory below, reached over Kamal's docker network by container name.
+    DB_HOST: hassan_traders-db
 
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
 
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
-# "bin/kamal logs -r job" will tail logs from the first server in the job section.
+# "bin/kamal logs -r web" will tail logs from the first server in the web section.
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
   shell: app exec --interactive --reuse "bash"
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
 
-# Use a persistent storage volume for sqlite database files and local Active Storage files.
-# Recommended to change this to a mounted volume path that is backed up off server.
+# Active Storage files (company logos) live in storage/. Keep them in a named volume
+# so they survive deploys. Back the volume up off the server (see docs/deploy.md).
 volumes:
   - "hassan_traders_storage:/rails/storage"
 
@@ -78,42 +76,38 @@ asset_path: /rails/public/assets
 
 # Configure the image builder.
 builder:
+  # The EC2 instance is x86_64. Use arm64 if it moves to Graviton (t4g).
   arch: amd64
 
   # # Build image via remote server (useful for faster amd64 builds on arm64 computers)
   # remote: ssh://docker@docker-builder-server
-  #
-  # # Pass arguments and secrets to the Docker build process
-  # args:
-  #   RUBY_VERSION: 4.0.3
-  # secrets:
-  #   - GITHUB_TOKEN
-  #   - RAILS_MASTER_KEY
 
-# Use a different ssh user than root
-# ssh:
-#   user: app
+# EC2 Ubuntu logs in as "ubuntu" (no root login) with the instance's key pair.
+# Docker must be installed by hand and ubuntu added to the docker group (docs/deploy.md).
+ssh:
+  user: ubuntu
+  keys: [ "~/.ssh/hassan_tarders.pem" ]
 
-# Use accessory services (secrets come from .kamal/secrets).
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     # Change to 3306 to expose port to the world instead of just local network.
-#     port: "127.0.0.1:3306:3306"
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
-#   redis:
-#     image: valkey/valkey:8
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
+# Postgres on the same server. The app's databases (primary, cache, queue, cable)
+# are created by db:prepare on first boot; POSTGRES_USER is a superuser so it can.
+accessories:
+  db:
+    image: postgres:17
+    host: *server_ip
+    # Sized for the 1 GB t3.micro (~70 MB in use under load): smaller shared buffers,
+    # few connections (the app needs under 10), and no JIT, which spikes memory per query.
+    cmd: >-
+      postgres -c shared_buffers=64MB -c max_connections=30 -c work_mem=4MB
+      -c maintenance_work_mem=32MB -c effective_cache_size=256MB -c jit=off
+    options:
+      memory: 256m
+    # Bound to localhost only: reach it from your machine with an SSH tunnel, not the internet.
+    port: "127.0.0.1:5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: hassan_traders
+        POSTGRES_DB: hassan_traders_production
+      secret:
+        - POSTGRES_PASSWORD:HASSAN_TRADERS_DATABASE_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data

@@ -10,7 +10,7 @@ Admin app for Pakistani traders and manufacturers: stock, purchase orders, sales
 
 ## Stack
 
-Rails 8.1, Ruby 4.0, PostgreSQL, Devise (login only, no sign-up routes), rolify, Pundit, Hotwire with importmap (no Node), Tailwind via tailwindcss-rails, Solid Queue/Cache/Cable, Kamal.
+Rails 8.1, Ruby 4.0, PostgreSQL, Devise (login only, no sign-up routes), rolify, Pundit, Hotwire with importmap (no Node), Tailwind via tailwindcss-rails, Solid Cache/Cable, Kamal. Production Active Job uses the in-process async adapter to fit a 1 GB server, so jobs aren't durable. Solid Queue is installed but off; see `docs/deploy.md` before adding jobs that must not be lost.
 
 ## Rules that apply everywhere
 
@@ -26,3 +26,5 @@ Rails 8.1, Ruby 4.0, PostgreSQL, Devise (login only, no sign-up routes), rolify,
 - `bin/dev`: run the app with the Tailwind watcher
 - `bin/rails test`: tests
 - `bin/rubocop`: lint
+- `bin/brakeman`, `bin/bundler-audit`, `bin/importmap audit`: the security scans CI runs (`.github/workflows/ci.yml`). Record a reviewed Brakeman false positive in `config/brakeman.ignore` with a note.
+- `bin/kamal deploy`, `bin/kamal console`, `bin/kamal logs`: deploy and production access. See `docs/deploy.md`.
