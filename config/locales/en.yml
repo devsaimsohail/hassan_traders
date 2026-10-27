@@ -40,3 +40,4 @@ en:
         invoice: "Bill"
       supplier_payment:
         ref: "Cheque no. / TID"
+        note: "Description"

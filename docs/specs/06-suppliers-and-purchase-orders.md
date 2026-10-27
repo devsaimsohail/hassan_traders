@@ -24,7 +24,7 @@ Buy raw material and finished goods from suppliers in a controlled way. **A PO i
 
 **purchase_order_lines**: po_no, item_id, qty, unit, rate, amount.
 
-**supplier_payments** (new; the prototype only stored a `paid` total): id, date, supplier_id, po_no (optional), amount, method (Cash, Bank Transfer, Cheque, JazzCash, Easypaisa), ref, paid_by.
+**supplier_payments** (new; the prototype only stored a `paid` total): id, date, supplier_id, po_no (optional), amount, method (Cash, Bank Transfer, Cheque, JazzCash, Easypaisa), ref, note (optional description), paid_by.
 
 **Calculated per PO:**
 
@@ -42,7 +42,7 @@ Draft → Pending Approval → Approved → Received
 1. **Make PO** (Accountant or Partner): choose supplier, add lines. The rate pre-fills from the item and can be changed. Then "Send for approval" or "Save as draft".
 2. **Approve** (Partner only). If a partner makes the PO, they may approve it in the same step. Logged as `Approved`.
 3. **Receive goods** (Store Incharge or Partner, Approved only): creates one `In` stock move per line with ref = po_no and sets received_on. Logged as `Received` per line with the quantity. Each item's average cost, last purchase rate and usual supplier are updated (see 05). If a line's rate is higher than the item's last purchase rate, the PO page shows a "Price went up" alert with the old and new rate, the percentage, the new average cost and, for finished goods, the current sale price with an "Update sale price" link. v1 receives the full PO; partial receiving is an open decision.
-4. **Pay supplier** (Partner or Accountant): records a supplier payment against the PO. It can't exceed what is still to pay, and needs a cheque number or TID unless paid in cash. Logged as `Paid`. Supplier payments are append-only.
+4. **Pay supplier** (Partner or Accountant): records a supplier payment against the PO. It can't exceed what is still to pay, and needs a cheque number or TID unless paid in cash. An optional description can be added. Logged as `Paid`. Supplier payments are append-only.
 5. **Cancel** (Partner, any state before Received). Stock is not touched.
 6. Drafts may be edited or deleted by their maker. Deleting is logged.
 

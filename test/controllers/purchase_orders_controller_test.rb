@@ -44,8 +44,10 @@ class PurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2500, items(:yarn).current_stock
 
     sign_in_as users(:accountant)
-    post pay_purchase_order_path(po), params: { payment: { amount: "1200", method: "bank_transfer", ref: "IBFT 123", date: "2026-10-18" } }
+    post pay_purchase_order_path(po), params: { payment: { amount: "1200", method: "bank_transfer", ref: "IBFT 123", note: "Full payment after quality check", date: "2026-10-18" } }
     assert_equal "Paid", po.reload.pay_status
+    follow_redirect!
+    assert_select "#po-payments td", text: "Full payment after quality check"
   end
 
   test "store staff can't make POs and sales staff can't see them" do

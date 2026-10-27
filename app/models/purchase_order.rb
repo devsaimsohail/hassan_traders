@@ -87,10 +87,10 @@ class PurchaseOrder < ApplicationRecord
     end
   end
 
-  def pay!(by:, amount:, method:, ref: nil, date: Date.current)
+  def pay!(by:, amount:, method:, ref: nil, note: nil, date: Date.current)
     raise NotAllowed, "Goods must be received before paying" unless received?
 
-    payment = supplier_payments.new(company:, supplier:, user: by, amount:, method:, ref: ref.presence, date:)
+    payment = supplier_payments.new(company:, supplier:, user: by, amount:, method:, ref: ref.presence, note: note.presence, date:)
     payment.validate
     payment.errors.add(:amount, "can't be more than #{Fmt.rs(balance)} still to pay") if payment.amount.to_i > balance
     return payment if payment.errors.any?

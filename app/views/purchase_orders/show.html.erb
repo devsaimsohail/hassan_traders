@@ -57,6 +57,7 @@
             <%= f.label :method, class: "label" do %>Method<%= f.select :method, SupplierPayment::METHODS.invert, {}, class: "input", data: { controller: "select" } %><% end %>
             <%= f.label :ref, class: "label" do %>Cheque no. / TID <span class="hint">Not needed for cash</span><%= f.text_field :ref, class: "input" %><% end %>
             <%= f.label :date, class: "label" do %>Date<%= f.date_field :date, value: Date.current, class: "input" %><% end %>
+            <%= f.label :note, class: "label sm:col-span-4" do %>Description <span class="hint">Optional</span><%= f.text_area :note, rows: 2, placeholder: "e.g. paid half now, rest after quality check", class: "input" %><% end %>
             <div class="sm:col-span-4"><%= f.submit "Save payment", class: "btn btn-sm" %></div>
           <% end %>
         </details>
@@ -110,10 +111,10 @@
   <section class="card overflow-hidden" id="po-payments">
     <h2 class="px-4 pt-4 pb-2 text-[15px] font-semibold">Payments to supplier</h2>
     <table class="table">
-      <thead><tr><th>Date</th><th>Method</th><th>Cheque / TID</th><th class="text-right">Amount</th><th>Paid by</th></tr></thead>
+      <thead><tr><th>Date</th><th>Method</th><th>Cheque / TID</th><th>Description</th><th class="text-right">Amount</th><th>Paid by</th></tr></thead>
       <tbody>
         <% @payments.each do |payment| %>
-          <tr><td class="whitespace-nowrap"><%= Fmt.date(payment.date) %></td><td><%= payment.method_label %></td><td><%= payment.ref %></td><td class="text-right font-medium tabular-nums"><%= Fmt.rs(payment.amount) %></td><td><%= payment.user.name %></td></tr>
+          <tr><td class="whitespace-nowrap"><%= Fmt.date(payment.date) %></td><td><%= payment.method_label %></td><td><%= payment.ref %></td><td class="text-muted"><%= payment.note %></td><td class="text-right font-medium tabular-nums"><%= Fmt.rs(payment.amount) %></td><td><%= payment.user.name %></td></tr>
         <% end %>
       </tbody>
     </table>

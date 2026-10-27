@@ -754,6 +754,7 @@ CREATE TABLE public.supplier_payments (
     ref character varying,
     user_id bigint NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
+    note character varying,
     CONSTRAINT supplier_payments_amount_positive CHECK ((amount > 0))
 );
 
@@ -2184,6 +2185,7 @@ ALTER TABLE ONLY public.invoice_lines
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261027000001'),
 ('20261020000001'),
 ('20261019000001'),
 ('20261018000013'),

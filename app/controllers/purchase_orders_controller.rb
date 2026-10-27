@@ -131,7 +131,7 @@ class PurchaseOrdersController < ApplicationController
     end
 
     def payment_params
-      params.require(:payment).permit(:amount, :method, :ref, :date)
+      params.require(:payment).permit(:amount, :method, :ref, :note, :date)
     end
 
     def sent_notice
