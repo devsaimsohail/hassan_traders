@@ -37,6 +37,8 @@ class PurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     assert po.reload.approved?
 
     sign_in_as users(:store)
+    get purchase_order_path(po)
+    assert_select "#receive input[name='received[#{po.lines.first.id}]']"
     post receive_purchase_order_path(po), params: { received_on: "2026-10-18" }
     assert_redirected_to purchase_order_path(po)
     follow_redirect!
@@ -48,6 +50,35 @@ class PurchaseOrdersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Paid", po.reload.pay_status
     follow_redirect!
     assert_select "#po-payments td", text: "Full payment after quality check"
+  end
+
+  test "the godown receives more than ordered and the PO follows" do
+    sign_in_as users(:partner)
+    post purchase_orders_path, params: po_params(send: "1")
+    po = PurchaseOrder.last
+    line = po.lines.first
+
+    sign_in_as users(:store)
+    post receive_purchase_order_path(po), params: { received_on: "2026-10-18", received: { line.id => "110" } }
+    assert_equal [ 110, 100, 1320 ], [ line.reload.qty, line.ordered_qty, po.reload.total ]
+
+    follow_redirect!
+    assert_select "#po-lines td", text: /110\s*ordered 100/
+
+    post receive_purchase_order_path(po), params: { received: { line.id => "5" } }
+    assert_equal 110, line.reload.qty
+  end
+
+  test "a received quantity of 0 is refused" do
+    sign_in_as users(:partner)
+    post purchase_orders_path, params: po_params(send: "1")
+    po = PurchaseOrder.last
+
+    sign_in_as users(:store)
+    post receive_purchase_order_path(po), params: { received: { po.lines.first.id => "0" } }
+    assert_redirected_to purchase_order_path(po)
+    assert_equal "Received quantity of Cotton Yarn 20s must be more than 0", flash[:alert]
+    assert po.reload.approved?
   end
 
   test "store staff can't make POs and sales staff can't see them" do

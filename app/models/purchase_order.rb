@@ -67,19 +67,25 @@ class PurchaseOrder < ApplicationRecord
     end
   end
 
-  def receive!(by:, on: Date.current)
+  # qtys maps line id to the quantity that actually came; a line left out came in full.
+  # The line's qty becomes what came (so stock, total and to-pay follow it) and ordered_qty keeps the order.
+  def receive!(by:, on: Date.current, qtys: {})
     raise NotAllowed, "Only approved POs can be received" unless approved?
 
+    qtys = qtys.to_h.transform_keys(&:to_s)
+    came = lines.to_h { |line| [ line, received_qty(line, qtys[line.id.to_s]) ] }
     transaction do
       items = company.items.where(id: lines.map(&:item_id)).order(:id).lock.index_by(&:id)
       changes = lines.map do |line|
         item = items.fetch(line.item_id)
+        line.update!(ordered_qty: line.qty, qty: came[line]) if came[line] != line.qty
         stock_before = item.current_stock
         old_rate = item.last_purchase_rate || item.rate
         avg = stock_before.positive? ? ((stock_before * item.rate + line.qty * line.rate) / (stock_before + line.qty)).round(2) : line.rate
         company.stock_moves.create!(item:, user: by, date: on, direction: "in", reason: "purchase_receive", qty: line.qty, ref: number)
         item.update!(rate: avg, last_purchase_rate: line.rate, last_purchase_on: on, default_supplier: supplier)
-        log!(by, "Received", "Received #{Fmt.qty(line.qty)} #{item.unit} #{item.name} — stock updated", section: "Stock")
+        ordered = " (ordered #{Fmt.qty(line.ordered_qty)})" if line.ordered_qty
+        log!(by, "Received", "Received #{Fmt.qty(line.qty)} #{item.unit} #{item.name}#{ordered} — stock updated", section: "Stock")
         PriceChange.new(item:, old_rate:, new_rate: line.rate, avg_cost: avg)
       end
       update!(status: "received", received_by: by, received_on: on)
@@ -137,6 +143,15 @@ class PurchaseOrder < ApplicationRecord
 
       last = company.purchase_orders.where("number ~ '^PO-[0-9]+$'").pluck(:number).map { |n| n.delete_prefix("PO-").to_i }.max
       self.number = "PO-#{(last || 1000) + 1}"
+    end
+
+    def received_qty(line, value)
+      return line.qty if value.blank?
+
+      qty = BigDecimal(value.to_s, exception: false)
+      raise NotAllowed, "Received quantity of #{line.item.name} must be more than 0" unless qty&.positive?
+
+      qty.round(3)
     end
 
     def has_lines

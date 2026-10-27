@@ -84,7 +84,8 @@ class PurchaseOrdersController < ApplicationController
 
   def receive
     on = Date.iso8601(params[:received_on].to_s) rescue Date.current
-    changes = @purchase_order.receive!(by: Current.user, on:)
+    qtys = params.fetch(:received, {}).permit(*@purchase_order.lines.map { |l| l.id.to_s }).to_h
+    changes = @purchase_order.receive!(by: Current.user, on:, qtys:)
     flash[:price_changes] = changes.map do |c|
       { "item_id" => c.item.id, "name" => c.item.name, "old" => c.old_rate.to_s, "new" => c.new_rate.to_s, "percent" => c.percent.to_s,
         "avg" => c.avg_cost.to_s, "product" => c.item.product?, "sale_price" => c.item.sale_price }

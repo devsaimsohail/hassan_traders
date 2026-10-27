@@ -22,7 +22,7 @@ Buy raw material and finished goods from suppliers in a controlled way. **A PO i
 | approved_by, approved_at | user, timestamp | |
 | received_on, received_by | date, user | |
 
-**purchase_order_lines**: po_no, item_id, qty, unit, rate, amount.
+**purchase_order_lines**: po_no, item_id, qty, unit, rate, amount, ordered_qty (set only when a different quantity was received; qty then holds what came).
 
 **supplier_payments** (new; the prototype only stored a `paid` total): id, date, supplier_id, po_no (optional), amount, method (Cash, Bank Transfer, Cheque, JazzCash, Easypaisa), ref, note (optional description), paid_by.
 
@@ -41,7 +41,7 @@ Draft → Pending Approval → Approved → Received
 
 1. **Make PO** (Accountant or Partner): choose supplier, add lines. The rate pre-fills from the item and can be changed. Then "Send for approval" or "Save as draft".
 2. **Approve** (Partner only). If a partner makes the PO, they may approve it in the same step. Logged as `Approved`.
-3. **Receive goods** (Store Incharge or Partner, Approved only): creates one `In` stock move per line with ref = po_no and sets received_on. Logged as `Received` per line with the quantity. Each item's average cost, last purchase rate and usual supplier are updated (see 05). If a line's rate is higher than the item's last purchase rate, the PO page shows a "Price went up" alert with the old and new rate, the percentage, the new average cost and, for finished goods, the current sale price with an "Update sale price" link. v1 receives the full PO; partial receiving is an open decision.
+3. **Receive goods** (Store Incharge or Partner, Approved only): The form lists each line with the ordered quantity and a Received box that starts at it; the godown changes it when more or less came (e.g. 90 or 110 of 100). Each changed line keeps the order in `ordered_qty` and its qty becomes what came, so stock, the PO total and the amount to pay follow what was received. Received quantities must be above 0. Receiving creates one `In` stock move per line with ref = po_no and sets received_on. Logged as `Received` per line with the quantity, plus "(ordered N)" when it differs. Each item's average cost, last purchase rate and usual supplier are updated (see 05). If a line's rate is higher than the item's last purchase rate, the PO page shows a "Price went up" alert with the old and new rate, the percentage, the new average cost and, for finished goods, the current sale price with an "Update sale price" link. v1 receives the full PO; partial receiving is an open decision.
 4. **Pay supplier** (Partner or Accountant): records a supplier payment against the PO. It can't exceed what is still to pay, and needs a cheque number or TID unless paid in cash. An optional description can be added. Logged as `Paid`. Supplier payments are append-only.
 5. **Cancel** (Partner, any state before Received). Stock is not touched.
 6. Drafts may be edited or deleted by their maker. Deleting is logged.
@@ -78,7 +78,7 @@ Draft → Pending Approval → Approved → Received
 - **Facts:** Supplier, PO date, Made by, Approved by (or "Not yet"), Goods received (date or "Not yet"), Supplier payment status
 - **Money strip:** PO total, Paid (green), To pay (red if above 0)
 - **Sections:**
-  - Items ordered: item, qty, unit, rate, amount
+  - Items ordered: item, qty (with "ordered N" under it when a different quantity came), unit, rate, amount
   - Goods received in godown: the stock In moves for this PO (date, item, qty, unit, received by). Click opens the item.
   - Payments to supplier, once that table exists
 - **Actions,** shown only when allowed:

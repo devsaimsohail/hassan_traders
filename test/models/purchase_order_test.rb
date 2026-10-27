@@ -62,6 +62,31 @@ class PurchaseOrderTest < ActiveSupport::TestCase
     assert_equal 2900, dye.reload.rate
   end
 
+  test "receiving a different quantity than ordered changes stock, total and to-pay" do
+    yarn, dye = items(:yarn), items(:dye)
+    po = make_po([ { item_id: yarn.id, qty: 100, rate: 10 }, { item_id: dye.id, qty: 10, rate: 2900 } ])
+    po.submit!(by: users(:partner))
+    yarn_line, dye_line = po.lines.to_a
+    stock_before = [ yarn.current_stock, dye.current_stock ]
+
+    po.receive!(by: users(:store), qtys: { yarn_line.id.to_s => "90", dye_line.id.to_s => "10" })
+
+    assert_equal [ 90, 100 ], [ yarn_line.reload.qty, yarn_line.ordered_qty ]
+    assert_nil dye_line.reload.ordered_qty
+    assert_equal [ 900 + 29_000, 29_900 ], [ po.reload.total, po.balance ]
+    assert_equal [ stock_before[0] + 90, stock_before[1] + 10 ], [ yarn.reload.current_stock, dye.reload.current_stock ]
+    assert ActivityLog.exists?(detail: "Received 90 #{yarn.unit} #{yarn.name} (ordered 100) — stock updated")
+  end
+
+  test "receiving needs a quantity above 0 and changes nothing otherwise" do
+    po = make_po([ { item_id: items(:yarn).id, qty: 100, rate: 10 } ])
+    po.submit!(by: users(:partner))
+
+    assert_raises(PurchaseOrder::NotAllowed) { po.receive!(by: users(:store), qtys: { po.lines.first.id => "0" }) }
+    assert_equal [ "approved", 100 ], [ po.reload.status, po.lines.first.qty ]
+    assert_equal 0, StockMove.where(ref: po.number).count
+  end
+
   test "only approved POs can be received" do
     po = make_po([ { item_id: items(:yarn).id, qty: 1, rate: 1 } ])
     assert_raises(PurchaseOrder::NotAllowed) { po.receive!(by: users(:store)) }

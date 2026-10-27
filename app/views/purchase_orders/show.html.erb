@@ -44,9 +44,27 @@
   <% if policy(po).receive? || policy(po).pay? || policy(po).cancel? %>
     <div class="flex flex-col gap-2 border-t border-line-soft pt-3">
       <% if policy(po).receive? %>
-        <%= form_with url: receive_purchase_order_path(po), class: "flex flex-wrap items-end gap-2" do |f| %>
-          <%= f.label :received_on, class: "label" do %>Goods received on<%= f.date_field :received_on, value: Date.current, class: "input min-h-8 py-1" %><% end %>
-          <%= f.submit "Receive goods into the godown", class: "btn btn-sm", data: { turbo_confirm: "Receive everything on #{po.number}? Stock goes up for each item." } %>
+        <%= form_with url: receive_purchase_order_path(po), id: "receive", class: "flex flex-col gap-3 rounded-lg border border-line-soft px-3 py-2" do |f| %>
+          <div class="text-[13px] font-medium">Receive goods <span class="hint">Change a quantity if more or less came than ordered</span></div>
+          <div class="overflow-x-auto">
+            <table class="table">
+              <thead><tr><th>Item</th><th class="text-right">Ordered</th><th class="text-right">Received</th><th>Unit</th></tr></thead>
+              <tbody>
+                <% po.lines.each do |line| %>
+                  <tr>
+                    <td class="whitespace-nowrap"><%= line.item.name %></td>
+                    <td class="text-right tabular-nums"><%= Fmt.qty(line.qty) %></td>
+                    <td class="text-right"><%= f.number_field "received[#{line.id}]", value: line.qty.to_d.to_s("F").delete_suffix(".0"), min: 0.001, step: "any", required: true, class: "input ml-auto min-h-8 w-20 py-1 text-right tabular-nums sm:w-28", aria: { label: "Received quantity of #{line.item.name}" } %></td>
+                    <td><%= line.item.unit %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex flex-wrap items-end gap-2">
+            <%= f.label :received_on, class: "label" do %>Goods received on<%= f.date_field :received_on, value: Date.current, class: "input min-h-8 py-1" %><% end %>
+            <%= f.submit "Receive goods into the godown", class: "btn btn-sm", data: { turbo_confirm: "Receive these quantities on #{po.number}? Stock goes up for each item and the PO total follows what came." } %>
+          </div>
         <% end %>
       <% end %>
       <% if policy(po).pay? %>
@@ -83,7 +101,7 @@
       <% po.lines.each do |line| %>
         <tr class="cursor-pointer hover:bg-hover" data-controller="row-link" data-action="click->row-link#open" data-row-link-href-value="<%= item_path(line.item) %>">
           <td class="whitespace-nowrap"><%= line.item.name %></td>
-          <td class="text-right tabular-nums"><%= Fmt.qty(line.qty) %></td>
+          <td class="text-right tabular-nums"><%= Fmt.qty(line.qty) %><% if line.ordered_qty %><div class="text-xs text-muted">ordered <%= Fmt.qty(line.ordered_qty) %></div><% end %></td>
           <td><%= line.item.unit %></td>
           <td class="text-right tabular-nums"><%= Fmt.rate(line.rate) %></td>
           <td class="text-right font-medium tabular-nums"><%= Fmt.rs(line.amount) %></td>

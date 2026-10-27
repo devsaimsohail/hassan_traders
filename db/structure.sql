@@ -471,6 +471,7 @@ CREATE TABLE public.purchase_order_lines (
     amount integer NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
+    ordered_qty numeric(12,3),
     CONSTRAINT purchase_order_lines_qty_positive CHECK ((qty > (0)::numeric)),
     CONSTRAINT purchase_order_lines_rate CHECK ((rate >= (0)::numeric))
 );
@@ -2185,6 +2186,7 @@ ALTER TABLE ONLY public.invoice_lines
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261027000002'),
 ('20261027000001'),
 ('20261020000001'),
 ('20261019000001'),
