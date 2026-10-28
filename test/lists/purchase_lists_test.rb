@@ -30,6 +30,21 @@ class PurchaseListsTest < ActiveSupport::TestCase
     assert_equal({ "Purchase orders" => "2", "Value" => "Rs 10,000", "Paid" => "Rs 4,000", "Still to pay" => "Rs 6,000" }, totals)
   end
 
+  test "supplier khata lists payments with filters and what is still to pay" do
+    @received.pay!(by: users(:accountant), amount: 1000, method: "bank_transfer", ref: "IBFT 9", note: "Second instalment")
+    khata = ->(params = {}) { SupplierPaymentList.new(companies(:hassan), ActionController::Parameters.new(params)) }
+
+    row = khata.call(q: "instalment").rows.sole
+    assert_equal [ "Usman Stitching Unit", @received.number, "Bank Transfer", "Bilal Ahmed" ], [ row.supplier_name, row.po_number, row.method_label, row.payer_name ]
+    assert_equal({ "all" => 2, "cash" => 1, "bank_transfer" => 1 }, khata.call.tab_counts.select { |_, n| n.positive? })
+    assert_equal [ 4000 ], khata.call(tab: "cash").rows.map(&:amount)
+    assert_empty khata.call(supplier: "Kohinoor Yarn Traders").rows
+
+    totals = khata.call.totals.to_h { |label, value, _| [ label, value ] }
+    assert_equal({ "Payments" => "2", "Total paid" => "Rs 5,000", "Cash" => "Rs 4,000", "Bank, cheque, wallet" => "Rs 1,000", "Still to pay" => "Rs 5,000" }, totals)
+    assert_equal "Rs 0", khata.call(supplier: "Kohinoor Yarn Traders").totals.last[1]
+  end
+
   test "supplier list shows what is still to pay" do
     suppliers = SupplierList.new(SupplierList.base(companies(:hassan)), ActionController::Parameters.new({}))
     assert_equal({ "S01" => 0, "S02" => 6000 }, suppliers.rows.to_h { |s| [ s.code, s[:to_pay] ] })

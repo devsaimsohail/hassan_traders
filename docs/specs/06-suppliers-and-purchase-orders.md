@@ -92,7 +92,21 @@ Draft → Pending Approval → Approved → Received
 
 ### Suppliers
 
-A simple list of suppliers (name, city, phone, supplies, total to pay) with add and edit, under Purchase orders or Settings. A supplier khata like the customer khata (11) is a likely follow-up.
+A simple list of suppliers (name, city, phone, supplies, total to pay) with add and edit, under Purchase orders or Settings.
+
+### Supplier khata
+
+A tab beside Purchase orders and Suppliers (`/purchases/khata`) listing every supplier payment. It is a list of payments, not a running-balance ledger like the customer khata (11).
+
+- **Tabs:** All · Cash · Bank Transfer · Cheque · JazzCash · Easypaisa (counts)
+- **Search:** supplier, PO number, cheque no. / TID, description
+- **Date range:** all by default
+- **Dropdowns:** Supplier, Paid by
+- **Totals:** Payments · Total paid (green) · Cash · Bank, cheque, wallet · Still to pay (red if above 0; for the chosen supplier, or all suppliers)
+- **Columns:** Date, Supplier, PO #, Method, Cheque / TID, Description, Amount, Paid by. Default sort newest first.
+- **Row click:** the PO the payment was made against
+- **PDF "Supplier payments"**, landscape, with the same columns and a total of Amount
+- **Who sees it:** the same roles that see purchase orders
 
 ## Dashboard links
 

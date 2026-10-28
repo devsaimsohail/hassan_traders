@@ -29,6 +29,7 @@ Rails.application.routes.draw do
       end
     end
     resources :suppliers, except: %i[ show destroy ]
+    resources :supplier_payments, path: "khata", only: :index
   end
 
   resources :customers, except: :destroy

@@ -1,0 +1,4 @@
+<% content_for :title, "Supplier khata" %>
+<% content_for :subtitle, "Every payment made to suppliers, and what is still to pay" %>
+<%= render "purchase_orders/tabs" %>
+<%= render "lists/list", list: @list, row_path: ->(payment) { purchase_order_path(payment.purchase_order_id) if payment.purchase_order_id } %>
